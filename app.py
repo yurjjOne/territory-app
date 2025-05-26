@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-app.secret_key = "MySecretKey2025"  # Змініть на унікальний ключ, наприклад, "MySecretKey2025"
+app.secret_key = "MySecretKey2025"  # Змініть на унікальний ключ
 
 # Ініціалізація бази даних
 def init_db():
@@ -31,7 +32,7 @@ def init_db():
 def login():
     if request.method == 'POST':
         password = request.form['password']
-        if password == "Pass123":  # Змініть на ваш пароль, наприклад, "Pass123"
+        if password == "Pass123":  # Змініть на свій пароль
             session['logged_in'] = True
             return redirect(url_for('index'))
         else:
@@ -70,6 +71,8 @@ def update_territory(territory_id):
     conn.close()
     return render_template('update.html', territory=territory)
 
+# Запуск сервера (адаптовано для Render)
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
