@@ -4,23 +4,179 @@
     <meta charset="UTF-8">
     <title>Оновити територію</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-container { margin-bottom: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #333;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .form-container { 
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background: #e4e4e4;
+        }
+        .btn-clear {
+            background: #ff5252;
+            color: white;
+        }
+        .btn-clear:hover {
+            background: #ff3939;
+        }
+        .status-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+        .status-label {
+            font-weight: bold;
+            color: #555;
+            width: 120px;
+        }
+        .status-value {
+            color: #333;
+        }
+        .history-section {
+            margin-top: 30px;
+        }
+        .history-section h3 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .history-item {
+            padding: 10px;
+            border-left: 3px solid #4CAF50;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+        .empty-history {
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h1>Оновити територію {{ territory[1] }}</h1>
-    <div class="form-container">
-        <form method="POST">
-            <label>Хто взяв:</label>
-            <input type="text" name="taken_by" value="{{ territory[3] or '' }}" required>
-            <label>Дата здачі (рррр-мм-дд):</label>
-            <input type="text" name="date_due" value="{{ territory[5] or '' }}" required>
-            <button type="submit">Зберегти</button>
-            <a href="{{ url_for('index') }}">Повернутися</a>
-        </form>
+    <div class="container">
+        <h1>Оновити територію {{ territory[1] }}</h1>
+        
+        <div class="form-container">
+            <form method="POST" class="form-group">
+                <label>Хто взяв:</label>
+                <input type="text" name="taken_by" value="{{ territory[3] or '' }}" placeholder="Введіть ім'я">
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+            </form>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Повернутися</a>
+            <form method="POST"
+                  action="{{ url_for('clear_territory', territory_id=territory[0]) }}"
+                  style="display: inline;">
+                <button type="submit" class="btn btn-clear">
+                    Очистити всі записи
+                </button>
+            </form>
+        </div>
+
+        <div class="status-section">
+            <div class="status-item">
+                <span class="status-label">📌 Статус:</span>
+                <span class="status-value">{{ territory[2] }}</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">📅 Дата видачі:</span>
+                <span class="status-value">{{ territory[4] or 'Немає' }}</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">📅 Дата здачі:</span>
+                <span class="status-value">{{ territory[5] or 'Немає' }}</span>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h3>🕓 Історія останніх 5 записів:</h3>
+            <ul class="history-list">
+                {% for h in history %}
+                    <li class="history-item">
+                        {{ h[0] }} — {{ h[1] }} → {{ h[2] }}
+                    </li>
+                {% else %}
+                    <li class="empty-history">— Немає історії —</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
-    <p>Статус: {{ territory[2] }}</p>
-    <p>Дата видачі: {{ territory[4] or 'Немає' }}</p>
 </body>
 </html>

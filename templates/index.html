@@ -1,38 +1,220 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <title>Облік територій</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Облік територій</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 { 
+      color: #333;
+      margin-bottom: 30px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    th, td { 
+      border: 1px solid #eee; 
+      padding: 12px; 
+      text-align: left; 
+    }
+    th { 
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+    }
+    .taken-row { background-color: #fff4f4; }
+    .free-row  { background-color: #f4fff4; }
+    .overdue   { 
+      background-color: #ffdddd;
+      position: relative;
+    }
+    .overdue::after {
+      content: "⚠️";
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .section-header { 
+      display: flex; 
+      align-items: center; 
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      margin: 0;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-header label { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+      cursor: pointer;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .section-header label:hover {
+      background: #e9ecef;
+    }
+    .section-header input[type="checkbox"] { 
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .btn-edit {
+      background: #4CAF50;
+      color: white;
+    }
+    .btn-edit:hover {
+      background: #45a049;
+    }
+    .btn-return {
+      background: #ff5252;
+      color: white;
+    }
+    .btn-return:hover {
+      background: #ff3939;
+    }
+    .btn-clear {
+      background: #aaa;
+      color: white;
+    }
+    .btn-clear:hover {
+      background: #999;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    form {
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
     <h1>Облік територій</h1>
-    <table>
+
+    <!-- Опрацьовують (Взято) -->
+    <div class="section-header">
+      <h2>🔴 Опрацьовують (Взято)</h2>
+      <label>
+        <input type="checkbox" id="showTaken" checked
+               onchange="toggleSection('taken', this.checked)">
+        Показати
+      </label>
+    </div>
+    <table id="taken">
+      <thead>
         <tr>
-            <th>Номер</th>
-            <th>Назва</th>
-            <th>Статус</th>
-            <th>Хто взяв</th>
-            <th>Дата видачі</th>
-            <th>Дата здачі</th>
-            <th>Дія</th>
+          <th>Номер</th>
+          <th>Назва</th>
+          <th>Хто взяв</th>
+          <th>Дата видачі</th>
+          <th>Дата здачі</th>
+          <th>Дія</th>
         </tr>
-        {% for territory in territories %}
-        <tr>
-            <td>{{ territory[0] }}</td>
-            <td>{{ territory[1] }}</td>
-            <td>{{ territory[2] }}</td>
-            <td>{{ territory[3] or 'Ніхто' }}</td>
-            <td>{{ territory[4] or 'Немає' }}</td>
-            <td>{{ territory[5] or 'Немає' }}</td>
-            <td><a href="{{ url_for('update_territory', territory_id=territory[0]) }}">Редагувати</a></td>
+      </thead>
+      <tbody>
+        {% for r, due_flag in taken %}
+        <tr class="taken-row">
+          <td>{{ r[0] }}</td>
+          <td>{{ r[1] }}</td>
+          <td>{{ r[3] }}</td>
+          <td{% if due_flag %} class="overdue"{% endif %}>{{ r[4] }}</td>
+          <td>{{ r[5] or '—' }}</td>
+          <td class="actions">
+            <a href="{{ url_for('update_territory', territory_id=r[0]) }}" class="btn btn-edit">Редагувати</a>
+            <form method="POST"
+                  action="{{ url_for('release_territory', territory_id=r[0]) }}">
+              <button type="submit" class="btn btn-return">Здано</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
+      </tbody>
     </table>
+
+    <!-- Вільні -->
+    <div class="section-header">
+      <h2>🟢 Вільні</h2>
+      <label>
+        <input type="checkbox" id="showFree" checked
+               onchange="toggleSection('free', this.checked)">
+        Показати
+      </label>
+    </div>
+    <table id="free">
+      <thead>
+        <tr>
+          <th>Номер</th>
+          <th>Назва</th>
+          <th>Дія</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in free %}
+        <tr class="free-row">
+          <td>{{ r[0] }}</td>
+          <td>{{ r[1] }}</td>
+          <td class="actions">
+            <a href="{{ url_for('update_territory', territory_id=r[0]) }}" class="btn btn-edit">Редагувати</a>
+            <form method="POST"
+                  action="{{ url_for('clear_territory', territory_id=r[0]) }}">
+              <button type="submit" class="btn btn-clear">Очистити</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function toggleSection(id, show) {
+      document.getElementById(id).style.display = show ? '' : 'none';
+    }
+    // При першому завантаженні
+    document.addEventListener('DOMContentLoaded', () => {
+      toggleSection('taken', document.getElementById('showTaken').checked);
+      toggleSection('free', document.getElementById('showFree').checked);
+    });
+  </script>
 </body>
 </html>
