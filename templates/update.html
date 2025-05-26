@@ -13,14 +13,13 @@
     <div class="form-container">
         <form method="POST">
             <label>Хто взяв:</label>
-            <input type="text" name="taken_by" value="{{ territory[3] or '' }}" required>
-            <label>Дата здачі (рррр-мм-дд):</label>
-            <input type="text" name="date_due" value="{{ territory[5] or '' }}" required>
+            <input type="text" name="taken_by" value="{{ territory[3] or '' }}">
             <button type="submit">Зберегти</button>
             <a href="{{ url_for('index') }}">Повернутися</a>
         </form>
     </div>
     <p>Статус: {{ territory[2] }}</p>
     <p>Дата видачі: {{ territory[4] or 'Немає' }}</p>
+    <p>Дата здачі: {{ territory[5] or 'Немає' }}</p>
 </body>
 </html>
