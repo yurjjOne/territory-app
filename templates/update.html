@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Оновити територію</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Оновити територію {{ territory[1] }}</h1>
+    <div class="form-container">
+        <form method="POST">
+            <label>Хто взяв:</label>
+            <input type="text" name="taken_by" value="{{ territory[3] or '' }}" required>
+            <label>Дата здачі (рррр-мм-дд):</label>
+            <input type="text" name="date_due" value="{{ territory[5] or '' }}" required>
+            <button type="submit">Зберегти</button>
+            <a href="{{ url_for('index') }}">Повернутися</a>
+        </form>
+    </div>
+    <p>Статус: {{ territory[2] }}</p>
+    <p>Дата видачі: {{ territory[4] or 'Немає' }}</p>
+</body>
+</html>

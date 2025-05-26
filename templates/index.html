@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Облік територій</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Облік територій</h1>
+    <table>
+        <tr>
+            <th>Номер</th>
+            <th>Назва</th>
+            <th>Статус</th>
+            <th>Хто взяв</th>
+            <th>Дата видачі</th>
+            <th>Дата здачі</th>
+            <th>Дія</th>
+        </tr>
+        {% for territory in territories %}
+        <tr>
+            <td>{{ territory[0] }}</td>
+            <td>{{ territory[1] }}</td>
+            <td>{{ territory[2] }}</td>
+            <td>{{ territory[3] or 'Ніхто' }}</td>
+            <td>{{ territory[4] or 'Немає' }}</td>
+            <td>{{ territory[5] or 'Немає' }}</td>
+            <td><a href="{{ url_for('update_territory', territory_id=territory[0]) }}">Редагувати</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
