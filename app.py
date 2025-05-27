@@ -108,6 +108,31 @@ def update_territory(territory_id):
             )
 
         return redirect(url_for('update_territory', territory_id=territory_id))
+@app.route('/release/<int:territory_id>', methods=['POST'])
+def release_territory(territory_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('territories.db')
+    c = conn.cursor()
+
+    # Очистити територію
+    c.execute("UPDATE territories SET status = ?, taken_by = '', date_taken = '', date_due = '' WHERE id = ?",
+              ("Вільна", territory_id))
+    conn.commit()
+    conn.close()
+
+    # Запис у Google Таблицю
+    from google_integration import update_google_sheet
+    update_google_sheet(
+        territory_id=territory_id,
+        taken_by="",
+        date_taken="",
+        date_due=datetime.now().strftime('%d.%m.%Y'),
+        returned=True
+    )
+
+    return redirect(url_for('index'))
 
     # GET-запит: показ сторінки
     conn = sqlite3.connect('territories.db')
