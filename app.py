@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime, timedelta
@@ -60,12 +61,12 @@ def update_territory(territory_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('territories.db')
-    c = conn.cursor()
-
     if request.method == 'POST':
         taken_by = request.form['taken_by'].strip()
         returned = not bool(taken_by)
+
+        conn = sqlite3.connect('territories.db')
+        c = conn.cursor()
 
         if taken_by:
             now = datetime.now()
@@ -81,6 +82,8 @@ def update_territory(territory_id):
 
             c.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5)",
                       (territory_id,))
+            conn.commit()
+            conn.close()
 
             update_google_sheet(
                 territory_id=territory_id,
@@ -93,6 +96,8 @@ def update_territory(territory_id):
         else:
             c.execute("UPDATE territories SET status = ?, taken_by = '', date_taken = '', date_due = '' WHERE id = ?",
                       ("Вільна", territory_id))
+            conn.commit()
+            conn.close()
 
             update_google_sheet(
                 territory_id=territory_id,
@@ -102,15 +107,17 @@ def update_territory(territory_id):
                 returned=True
             )
 
-        conn.commit()
+        return redirect(url_for('update_territory', territory_id=territory_id))
 
+    # GET-запит: показ сторінки
+    conn = sqlite3.connect('territories.db')
+    c = conn.cursor()
     c.execute("SELECT * FROM territories WHERE id = ?", (territory_id,))
     territory = c.fetchone()
 
     c.execute("SELECT taken_by, date_taken, date_due FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5",
               (territory_id,))
     history = c.fetchall()
-
     conn.close()
     return render_template('update.html', territory=territory, history=history)
 
