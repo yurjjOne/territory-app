@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "territory-app-461105",
+  "private_key_id": "e5b14c010a912898a57e7e0165bd580d3f5840df",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCrYINcQNmW+PAa\nuz2PbmN0TuxwMOFuPcTqNf4/cx3OdgTip1vKPrAHba/JE2cBJav+dw5g3lS+tsTj\ng99lgu5YOt+xpRvzrMWEG4+YjDtPvdaEOCdUB5x8qelldEbJsPIOSKXnefSuyYtB\nqblKyNMAMDKU4Tjd2cqQ8RFNG/FGsUtxwfXYsnOLzGooKMMc/isi1OX+9rN5UPXv\n0tZ+dqypdAaPX6avB0OCKORpen+g3i0/fbgiKbPFWld689wI/73IcypPPUvVqVu5\nV0u4lhfqJX2urWP4Si86ENlfjHUQzq2Ao4fkBpRrGHwfEW7wPFgFMXNddadhDq5f\nvVyDY1o5AgMBAAECggEAEtNYyrxdn/h7mQF4MIvYmqZa0bOE5/vFaFGturbrZMp7\nxzwe2KzMixxbot53Ql3ViBqi9orQdgdqFxtdjG9MEwlwmOPsGfdLgTNtMZLh/GSn\nA8I5YRaESat5Nd8Ghvxhh/vSAbIDag8+CroECTjd+Nd9OZ6Ir9Ikrt7/CWCS6ggR\n6MsXZkKRy3mw/ZNtUtsXRk8ku0FVmiDUca+gOJX+RmSVIRsBej9wfMJwUTSSv0m/\nH2eQ1LGRpUWnsOM3cTlfzJS1a2p1K+pjEQNp0/Iz8IwCI8LoER+L6N5fl1Vl+YEk\nQ5XYtueC/GRqfBqoWVfjfcU93qE/A63ZlDenxeWSywKBgQDmfTcujkrXb+Cg/USy\nDo/NLLj28oC0eKmakI7SVKIFY9bi6G27/+rNODxPF2c9GxZ8ldIZYQisecuPJaR7\neI5Us2/sTkVAsiRjGt8I6qsFkb4AFeuY2JAEk0ZybWcji9bN5b89LyQbDe0OiyoQ\nfhaJd1Y4HBdvlF7ru4U0jAA1xwKBgQC+WGNAwwe4oFb+VmgxMTeqaw/WDENUIjyA\n4xO0sR2h+kMT4vcEP5NGvoz3bjf7mo8YGDT0f1FLa9jaywohe8WGq1jJclTi/xMZ\nDxUAdHwNcOmjZ6K26D6BteY8JHgREipn81YqvEXlmuYXTyx5kmvmnc723edNIdC4\ni8sbVz/v/wKBgBK94cvOVDWaakiM75YO6xCC73NdGqwSF7Byyro9mYMYsDN5NNsR\nnzUauoSv4XwthLGSuSfJJRxpNu0n4W0My34FrTco0ibFlYHdgH9IHanxROLa5XJj\nQaqtkw/g538Tct8BLIC8IZJ1mm4RUNVQe2KoKoGbfyhahzFh6R3xuF6nAoGAc8Eu\nwuCYHngrz0pe3KOQtaucGtCkVVLotnzhq/4WBj46cqqRC91ZxCj3czVtCC6LHN0D\nvzh6CMLSQuQ9CfXKPsaPHRrRcqYqSA/69qbgFhB3lS7eLht4f8tN838+ISuJ7GN4\nIE8UtrgHe19jrZ8UzU9k4I48LpUE6GXjI4Jg2KMCgYA9cEW3PXfqtV/Yr9zmL3Rw\nIDznlyP/gxKTsmOHd+69Ts1J1XH3zGY2w8re6eXXLAfJ5nSWfw2XhA9Wt7/gQ4zo\n/kW5P27jn65M5Rtq4vIjRaFSun9UD0lbrATedd2iNL7DG2WHXH8XKtNls871Dc9G\nSjcrQakwXCRyHpM+xqlBgg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "territory-app@territory-app-461105.iam.gserviceaccount.com",
+  "client_id": "109694274875208264251",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/territory-app%40territory-app-461105.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
