@@ -178,7 +178,7 @@ def release_territory(territory_id):
         territory_id=territory_id,
         taken_by="",
         date_taken="",
-        date_due=datetime.now().strftime('%d.%м.%Y'),
+        date_due=datetime.now().strftime('%d.%m.%Y'),
         returned=True
     )
 
