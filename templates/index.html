@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -11,6 +12,9 @@
         h2 { margin-top: 40px; color: #444; }
         .taken { background-color: #fff4f4; }
         .free { background-color: #f4fff4; }
+        form { display: inline; }
+        button { background-color: #c9302c; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        button:hover { background-color: #ac2925; }
     </style>
 </head>
 <body>
@@ -33,7 +37,12 @@
             <td>{{ t[3] or 'Ніхто' }}</td>
             <td>{{ t[4] or 'Немає' }}</td>
             <td>{{ t[5] or 'Немає' }}</td>
-            <td><a href="{{ url_for('update_territory', territory_id=t[0]) }}">Редагувати</a></td>
+            <td>
+                <a href="{{ url_for('update_territory', territory_id=t[0]) }}">Редагувати</a>
+                <form method="POST" action="{{ url_for('release_territory', territory_id=t[0]) }}">
+                    <button type="submit">Здано</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
