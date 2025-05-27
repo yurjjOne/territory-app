@@ -8,42 +8,56 @@ scope = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive"
 ]
-creds = ServiceAccountCredentials.from_json_keyfile_name("territory-app-461105-e5b14c010a91.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(
+    "territory-app-461105-e5b14c010a91.json", scope
+)
 client = gspread.authorize(creds)
 
-# Основна функція інтеграції
-def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=False):
-    # Відкриваємо таблицю
-    sheet = client.open_by_key("17bGUa7uyxFFJhCTp2UdDuydbFW1UyEN7WoqJ6VlbCig").sheet1
+SPREADSHEET_ID = "17bGUa7uyxFFJhCTp2UdDuydbFW1UyEN7WoqJ6VlbCig"
 
-    # Вираховуємо базовий рядок для території
-    row_base = 6 + ((territory_id - 1) * 2)
+def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=False):
+    sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+    row_base = 6 + (territory_id - 1) * 2
     visnyk_row = row_base
     date_row = row_base + 1
-
     max_blocks = 5
-    written = False
 
-    # Проходимо по 5 блоках (C:D, E:F, G:H, I:J, K:L)
-    for i in range(max_blocks):
-        col = 3 + i * 2  # C=3, E=5, ...
-        visnyk = sheet.cell(visnyk_row, col).value
-        if not visnyk:
-            if not returned:
+    if not returned:
+        # запис нового вісника в перший вільний блок
+        for i in range(max_blocks):
+            col = 3 + i * 2
+            if not sheet.cell(visnyk_row, col).value:
                 sheet.update_cell(visnyk_row, col, taken_by)
                 sheet.update_cell(date_row, col, date_taken)
-            else:
                 sheet.update_cell(date_row, col + 1, date_due)
-            written = True
-            break
-
-    # Якщо всі 5 блоків зайняті — очищаємо й записуємо з початку
-    if not written:
+                return
+        # якщо всі блоки зайняті — очищаємо й записуємо в перший
         for i in range(max_blocks):
             col = 3 + i * 2
             sheet.update_cell(visnyk_row, col, "")
             sheet.update_cell(date_row, col, "")
             sheet.update_cell(date_row, col + 1, "")
-        # Записуємо у перший блок
         sheet.update_cell(visnyk_row, 3, taken_by)
         sheet.update_cell(date_row, 3, date_taken)
+        sheet.update_cell(date_row, 4, date_due)
+    else:
+        # запис дати здачі в останній непорожній блок
+        for i in reversed(range(max_blocks)):
+            col = 3 + i * 2
+            if sheet.cell(visnyk_row, col).value:
+                sheet.update_cell(date_row, col + 1, date_due)
+                return
+        # якщо не знайдений — записуємо дату здачі в перший правий блок
+        sheet.update_cell(date_row, 4, date_due)
+
+def clear_google_sheet(territory_id):
+    sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+    row_base = 6 + (territory_id - 1) * 2
+    visnyk_row = row_base
+    date_row = row_base + 1
+    # очищаємо усі 5 блоків
+    for i in range(5):
+        col = 3 + i * 2
+        sheet.update_cell(visnyk_row, col, "")
+        sheet.update_cell(date_row, col, "")
+        sheet.update_cell(date_row, col + 1, "")
