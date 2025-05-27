@@ -2,9 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime, timedelta
 import os
+from google_integration import update_google_sheet  # 👈 додаємо інтеграцію
 
 app = Flask(__name__)
-app.secret_key = "MySecretKey2025"  # змініть на унікальний ключ
+app.secret_key = "MySecretKey2025"
 
 # Ініціалізація бази даних
 def init_db():
@@ -28,7 +29,7 @@ def init_db():
     c.execute("SELECT COUNT(*) FROM territories")
     if c.fetchone()[0] == 0:
         for i in range(1, 182):
-            c.execute("INSERT INTO territories (id, name, status) VALUES (?, ?, ?)", 
+            c.execute("INSERT INTO territories (id, name, status) VALUES (?, ?, ?)",
                       (i, f"Територія {i}", "Вільна"))
     conn.commit()
     conn.close()
@@ -75,29 +76,43 @@ def update_territory(territory_id):
             date_due = (now + timedelta(days=120)).strftime('%d.%m.%Y')
             status = "Взято"
 
-            # Оновити територію
             c.execute("UPDATE territories SET status = ?, taken_by = ?, date_taken = ?, date_due = ? WHERE id = ?",
                       (status, taken_by, date_taken, date_due, territory_id))
 
-            # Додати в історію
             c.execute("INSERT INTO history (territory_id, taken_by, date_taken, date_due) VALUES (?, ?, ?, ?)",
                       (territory_id, taken_by, date_taken, date_due))
 
-            # Залишити тільки останні 5 записів
             c.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5)",
                       (territory_id,))
+
+            # ✅ Google Таблиця — заповнення
+            update_google_sheet(
+                territory_id=territory_id,
+                taken_by=taken_by,
+                date_taken=date_taken,
+                date_due=date_due,
+                returned=False
+            )
+
         else:
             # Скидання
             c.execute("UPDATE territories SET status = ?, taken_by = '', date_taken = '', date_due = '' WHERE id = ?",
                       ("Вільна", territory_id))
 
+            # ✅ Google Таблиця — здача території
+            update_google_sheet(
+                territory_id=territory_id,
+                taken_by="",
+                date_taken="",
+                date_due=datetime.now().strftime('%d.%m.%Y'),
+                returned=True
+            )
+
         conn.commit()
 
-    # Отримати поточну територію
     c.execute("SELECT * FROM territories WHERE id = ?", (territory_id,))
     territory = c.fetchone()
 
-    # Отримати історію останніх 5 записів
     c.execute("SELECT taken_by, date_taken, date_due FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5",
               (territory_id,))
     history = c.fetchall()
