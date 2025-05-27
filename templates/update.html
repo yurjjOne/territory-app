@@ -8,22 +8,42 @@
         .form-container { margin-bottom: 20px; }
         ul { list-style-type: none; padding: 0; }
         li { padding: 4px 0; }
+        .btn-clear {
+            background: #aaa;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-clear:hover {
+            background: #888;
+        }
     </style>
 </head>
 <body>
     <h1>Оновити територію {{ territory[1] }}</h1>
     <div class="form-container">
-        <form method="POST">
+        <form method="POST" style="display: inline;">
             <label>Хто взяв:</label>
             <input type="text" name="taken_by" value="{{ territory[3] or '' }}">
             <button type="submit">Зберегти</button>
-            <a href="{{ url_for('index') }}">Повернутися</a>
+        </form>
+        <a href="{{ url_for('index') }}">Повернутися</a>
+
+        <!-- Кнопка Очистити -->
+        <form method="POST"
+              action="{{ url_for('clear_territory', territory_id=territory[0]) }}"
+              style="display: inline;">
+            <button type="submit" class="btn-clear">
+                Очистити всі записи
+            </button>
         </form>
     </div>
 
     <p>📌 Статус: <strong>{{ territory[2] }}</strong></p>
     <p>📅 Дата видачі: <strong>{{ territory[4] or 'Немає' }}</strong></p>
-    <p>📅 Дата здачі: <strong>{{ territory[5] or 'Немає' }}</strong></p>
+    <p>📅 Дата здачі:   <strong>{{ territory[5] or 'Немає' }}</strong></p>
 
     <h3>🕓 Історія останніх 5 записів:</h3>
     <ul>
