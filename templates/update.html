@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Оновити територію</title>
     <style>
+<<<<<<< HEAD
         body { 
             font-family: Arial, sans-serif; 
             margin: 0;
@@ -127,10 +128,27 @@
             padding: 10px;
             background: #f8f9fa;
             border-radius: 4px;
+=======
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { margin-bottom: 20px; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 4px 0; }
+        .btn-clear {
+            background: #aaa;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-clear:hover {
+            background: #888;
+>>>>>>> 85dc26e15f019e6a9092fc959c2cbce1a6c2131e
         }
     </style>
 </head>
 <body>
+<<<<<<< HEAD
     <div class="container">
         <h1>Оновити територію {{ territory[1] }}</h1>
         
@@ -178,5 +196,38 @@
             </ul>
         </div>
     </div>
+=======
+    <h1>Оновити територію {{ territory[1] }}</h1>
+    <div class="form-container">
+        <form method="POST" style="display: inline;">
+            <label>Хто взяв:</label>
+            <input type="text" name="taken_by" value="{{ territory[3] or '' }}">
+            <button type="submit">Зберегти</button>
+        </form>
+        <a href="{{ url_for('index') }}">Повернутися</a>
+
+        <!-- Кнопка Очистити -->
+        <form method="POST"
+              action="{{ url_for('clear_territory', territory_id=territory[0]) }}"
+              style="display: inline;">
+            <button type="submit" class="btn-clear">
+                Очистити всі записи
+            </button>
+        </form>
+    </div>
+
+    <p>📌 Статус: <strong>{{ territory[2] }}</strong></p>
+    <p>📅 Дата видачі: <strong>{{ territory[4] or 'Немає' }}</strong></p>
+    <p>📅 Дата здачі:   <strong>{{ territory[5] or 'Немає' }}</strong></p>
+
+    <h3>🕓 Історія останніх 5 записів:</h3>
+    <ul>
+        {% for h in history %}
+            <li>🔸 {{ h[0] }} — {{ h[1] }} → {{ h[2] }}</li>
+        {% else %}
+            <li>— Немає історії —</li>
+        {% endfor %}
+    </ul>
+>>>>>>> 85dc26e15f019e6a9092fc959c2cbce1a6c2131e
 </body>
 </html>
