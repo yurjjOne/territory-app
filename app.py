@@ -2,12 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 from datetime import datetime, timedelta
 import os
-from google_integration import update_google_sheet  # 👈 додаємо інтеграцію
+from google_integration import update_google_sheet
 
 app = Flask(__name__)
 app.secret_key = "MySecretKey2025"
 
-# Ініціалізація бази даних
 def init_db():
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
@@ -34,7 +33,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Логін
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -46,7 +44,6 @@ def login():
             return "Неправильний пароль"
     return render_template('login.html')
 
-# Головна сторінка
 @app.route('/')
 def index():
     if not session.get('logged_in'):
@@ -58,7 +55,6 @@ def index():
     conn.close()
     return render_template('index.html', territories=territories)
 
-# Оновлення території
 @app.route('/update/<int:territory_id>', methods=['GET', 'POST'])
 def update_territory(territory_id):
     if not session.get('logged_in'):
@@ -68,7 +64,8 @@ def update_territory(territory_id):
     c = conn.cursor()
 
     if request.method == 'POST':
-        taken_by = request.form['taken_by']
+        taken_by = request.form['taken_by'].strip()
+        returned = not bool(taken_by)
 
         if taken_by:
             now = datetime.now()
@@ -85,7 +82,6 @@ def update_territory(territory_id):
             c.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5)",
                       (territory_id,))
 
-            # ✅ Google Таблиця — заповнення
             update_google_sheet(
                 territory_id=territory_id,
                 taken_by=taken_by,
@@ -95,11 +91,9 @@ def update_territory(territory_id):
             )
 
         else:
-            # Скидання
             c.execute("UPDATE territories SET status = ?, taken_by = '', date_taken = '', date_due = '' WHERE id = ?",
                       ("Вільна", territory_id))
 
-            # ✅ Google Таблиця — здача території
             update_google_sheet(
                 territory_id=territory_id,
                 taken_by="",
@@ -120,7 +114,6 @@ def update_territory(territory_id):
     conn.close()
     return render_template('update.html', territory=territory, history=history)
 
-# Запуск
 if __name__ == '__main__':
     init_db()
     port = int(os.environ.get("PORT", 5000))
