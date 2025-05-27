@@ -18,6 +18,13 @@ def init_db():
         date_taken TEXT,
         date_due TEXT
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        territory_id INTEGER,
+        taken_by TEXT,
+        date_taken TEXT,
+        date_due TEXT
+    )''')
     c.execute("SELECT COUNT(*) FROM territories")
     if c.fetchone()[0] == 0:
         for i in range(1, 182):
@@ -55,20 +62,48 @@ def index():
 def update_territory(territory_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
+
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
+
     if request.method == 'POST':
         taken_by = request.form['taken_by']
-        date_taken = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        date_due = (datetime.now() + timedelta(days=120)).strftime('%Y-%m-%d %H:%M:%S')
-        status = "Взято" if taken_by else "Вільна"
-        c.execute("UPDATE territories SET status = ?, taken_by = ?, date_taken = ?, date_due = ? WHERE id = ?",
-                  (status, taken_by, date_taken if status == "Взято" else "", date_due if status == "Взято" else "", territory_id))
+
+        if taken_by:
+            now = datetime.now()
+            date_taken = now.strftime('%d.%m.%Y')
+            date_due = (now + timedelta(days=120)).strftime('%d.%m.%Y')
+            status = "Взято"
+
+            # Оновити територію
+            c.execute("UPDATE territories SET status = ?, taken_by = ?, date_taken = ?, date_due = ? WHERE id = ?",
+                      (status, taken_by, date_taken, date_due, territory_id))
+
+            # Додати в історію
+            c.execute("INSERT INTO history (territory_id, taken_by, date_taken, date_due) VALUES (?, ?, ?, ?)",
+                      (territory_id, taken_by, date_taken, date_due))
+
+            # Залишити тільки останні 5 записів
+            c.execute("DELETE FROM history WHERE id NOT IN (SELECT id FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5)",
+                      (territory_id,))
+        else:
+            # Скидання
+            c.execute("UPDATE territories SET status = ?, taken_by = '', date_taken = '', date_due = '' WHERE id = ?",
+                      ("Вільна", territory_id))
+
         conn.commit()
+
+    # Отримати поточну територію
     c.execute("SELECT * FROM territories WHERE id = ?", (territory_id,))
     territory = c.fetchone()
+
+    # Отримати історію останніх 5 записів
+    c.execute("SELECT taken_by, date_taken, date_due FROM history WHERE territory_id = ? ORDER BY id DESC LIMIT 5",
+              (territory_id,))
+    history = c.fetchall()
+
     conn.close()
-    return render_template('update.html', territory=territory)
+    return render_template('update.html', territory=territory, history=history)
 
 # Запуск
 if __name__ == '__main__':
