@@ -1,78 +1,96 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <title>Облік територій</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 40px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        h2 { margin-top: 40px; color: #444; cursor: pointer; }
-        .taken-row { background-color: #fff4f4; }
-        .free-row  { background-color: #f4fff4; }
-        .overdue   { background-color: #ffdddd; }
-        form { display: inline; }
-        button { background-color: #c9302c; color: white; border: none; padding: 5px 10px; cursor: pointer; }
-        button:hover { background-color: #ac2925; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Облік територій</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .taken-row { background-color: #fff4f4; }
+    .free-row  { background-color: #f4fff4; }
+    .overdue   { background-color: #ffdddd; }
+    .toggles { margin-bottom: 20px; }
+    .toggles label { margin-right: 20px; cursor: pointer; }
+    button { background-color: #c9302c; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+    button:hover { background-color: #ac2925; }
+  </style>
 </head>
 <body>
-    <h1>Облік територій</h1>
+  <h1>Облік територій</h1>
 
-    <h2 onclick="toggle('taken')">🔴 Опрацьовують (Взято)</h2>
-    <table id="taken">
-        <tr>
-            <th>Номер</th>
-            <th>Назва</th>
-            <th>Хто взяв</th>
-            <th>Дата видачі</th>
-            <th>Дата здачі</th>
-            <th>Дія</th>
-        </tr>
-        {% for r, due_flag in taken %}
-        <tr class="taken-row">
-            <td>{{ r[0] }}</td>
-            <td>{{ r[1] }}</td>
-            <td>{{ r[3] or 'Ніхто' }}</td>
-            <td{% if due_flag %} class="overdue"{% endif %}>{{ r[4] or 'Немає' }}</td>
-            <td>{{ r[5] or 'Немає' }}</td>
-            <td>
-                <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
-                <form method="POST" action="{{ url_for('release_territory', territory_id=r[0]) }}">
-                    <button type="submit">Здано</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+  <!-- Чекбокси для сховання/показу секцій -->
+  <div class="toggles">
+    <label>
+      <input type="checkbox" id="showTaken" checked
+             onchange="toggleSection('taken', this.checked)">
+      Показати "Опрацьовують"
+    </label>
+    <label>
+      <input type="checkbox" id="showFree" checked
+             onchange="toggleSection('free', this.checked)">
+      Показати "Вільні"
+    </label>
+  </div>
 
-    <h2 onclick="toggle('free')">🟢 Вільні</h2>
-    <table id="free">
-        <tr>
-            <th>Номер</th>
-            <th>Назва</th>
-            <th>Дія</th>
-        </tr>
-        {% for r in free %}
-        <tr class="free-row">
-            <td>{{ r[0] }}</td>
-            <td>{{ r[1] }}</td>
-            <td>
-                <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
-                <form method="POST" action="{{ url_for('clear_territory', territory_id=r[0]) }}">
-                    <button type="submit" style="background:#aaa;">Очистити</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+  <!-- Опрацьовують (Взято) -->
+  <h2>🔴 Опрацьовують (Взято)</h2>
+  <table id="taken">
+    <tr>
+      <th>Номер</th><th>Назва</th><th>Хто взяв</th>
+      <th>Дата видачі</th><th>Дата здачі</th><th>Дія</th>
+    </tr>
+    {% for r, due_flag in taken %}
+    <tr class="taken-row">
+      <td>{{ r[0] }}</td>
+      <td>{{ r[1] }}</td>
+      <td>{{ r[3] }}</td>
+      <td{% if due_flag %} class="overdue"{% endif %}>{{ r[4] }}</td>
+      <td>{{ r[5] or '—' }}</td>
+      <td>
+        <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
+        <form method="POST"
+              action="{{ url_for('release_territory', territory_id=r[0]) }}"
+              style="display:inline">
+          <button type="submit">Здано</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
 
-    <script>
-        function toggle(id) {
-            const tbl = document.getElementById(id);
-            tbl.style.display = tbl.style.display === 'none' ? '' : 'none';
-        }
-    </script>
+  <!-- Вільні -->
+  <h2>🟢 Вільні</h2>
+  <table id="free">
+    <tr>
+      <th>Номер</th><th>Назва</th><th>Дія</th>
+    </tr>
+    {% for r in free %}
+    <tr class="free-row">
+      <td>{{ r[0] }}</td>
+      <td>{{ r[1] }}</td>
+      <td>
+        <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
+        <form method="POST"
+              action="{{ url_for('clear_territory', territory_id=r[0]) }}"
+              style="display:inline">
+          <button style="background:#aaa">Очистити</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <script>
+    function toggleSection(id, show) {
+      document.getElementById(id).style.display = show ? '' : 'none';
+    }
+    // При першому завантаженні
+    document.addEventListener('DOMContentLoaded', () => {
+      toggleSection('taken', document.getElementById('showTaken').checked);
+      toggleSection('free', document.getElementById('showFree').checked);
+    });
+  </script>
 </body>
 </html>
