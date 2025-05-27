@@ -7,11 +7,9 @@ from google_integration import update_google_sheet, clear_google_sheet
 app = Flask(__name__)
 app.secret_key = "MySecretKey2025"
 
-
 def init_db():
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
-    # Основна таблиця
     c.execute('''CREATE TABLE IF NOT EXISTS territories (
         id INTEGER PRIMARY KEY,
         name TEXT,
@@ -20,7 +18,6 @@ def init_db():
         date_taken TEXT,
         date_due TEXT
     )''')
-    # Історія змін
     c.execute('''CREATE TABLE IF NOT EXISTS history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         territory_id INTEGER,
@@ -28,7 +25,6 @@ def init_db():
         date_taken TEXT,
         date_due TEXT
     )''')
-    # Заповнення територій від 1 до 181
     c.execute("SELECT COUNT(*) FROM territories")
     if c.fetchone()[0] == 0:
         for i in range(1, 182):
@@ -39,7 +35,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -49,25 +44,48 @@ def login():
         return "Неправильний пароль"
     return render_template('login.html')
 
-
 @app.route('/')
 def index():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
+
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM territories ORDER BY status DESC, id ASC")
-    territories = c.fetchall()
-    conn.close()
-    return render_template('index.html', territories=territories)
 
+    # --- Опрацьовують: взяті території, сортування за датою видачі (від найстаріших) ---
+    c.execute("SELECT * FROM territories WHERE status='Взято'")
+    rows = c.fetchall()
+    # сортуємо Python-сторонами за date_taken (r[4])
+    try:
+        rows.sort(key=lambda r: datetime.strptime(r[4], '%d.%m.%Y'))
+    except:
+        pass
+
+    taken = []
+    now = datetime.now()
+    for r in rows:
+        # прапорець: залишилось ≤10 днів до планової дати здачі (r[5])
+        due_flag = False
+        try:
+            due = datetime.strptime(r[5], '%d.%m.%Y')
+            if (due - now).days <= 10:
+                due_flag = True
+        except:
+            pass
+        taken.append((r, due_flag))
+
+    # --- Вільні території ---
+    c.execute("SELECT * FROM territories WHERE status='Вільна' ORDER BY id")
+    free = c.fetchall()
+
+    conn.close()
+    return render_template('index.html', taken=taken, free=free)
 
 @app.route('/update/<int:territory_id>', methods=['GET', 'POST'])
 def update_territory(territory_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    # --- POST: збереження змін ---
     if request.method == 'POST':
         taken_by = request.form['taken_by'].strip()
         conn = sqlite3.connect('territories.db')
@@ -78,14 +96,11 @@ def update_territory(territory_id):
             date_taken = now.strftime('%d.%m.%Y')
             date_due = (now + timedelta(days=120)).strftime('%d.%m.%Y')
 
-            # Оновити таблицю
             c.execute("""
                 UPDATE territories
                    SET status=?, taken_by=?, date_taken=?, date_due=?
                  WHERE id=?
             """, ("Взято", taken_by, date_taken, date_due, territory_id))
-
-            # Додати в історію і залишити лише 5 останніх
             c.execute("""
                 INSERT INTO history (territory_id, taken_by, date_taken, date_due)
                 VALUES (?, ?, ?, ?)
@@ -99,11 +114,9 @@ def update_territory(territory_id):
                      LIMIT 5
                   )
             """, (territory_id,))
-
             conn.commit()
             conn.close()
 
-            # Google Sheets
             update_google_sheet(
                 territory_id=territory_id,
                 taken_by=taken_by,
@@ -111,9 +124,7 @@ def update_territory(territory_id):
                 date_due=date_due,
                 returned=False
             )
-
         else:
-            # Звільнення
             c.execute("""
                 UPDATE territories
                    SET status='Вільна', taken_by='', date_taken='', date_due=''
@@ -132,7 +143,7 @@ def update_territory(territory_id):
 
         return redirect(url_for('update_territory', territory_id=territory_id))
 
-    # --- GET: показ форми та історії ---
+    # GET-запит: відобразити поточну територію і її історію
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
     c.execute("SELECT * FROM territories WHERE id=?", (territory_id,))
@@ -148,13 +159,11 @@ def update_territory(territory_id):
     conn.close()
     return render_template('update.html', territory=territory, history=history)
 
-
 @app.route('/release/<int:territory_id>', methods=['POST'])
 def release_territory(territory_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    # Перевести у "Вільна"
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
     c.execute("""
@@ -165,24 +174,21 @@ def release_territory(territory_id):
     conn.commit()
     conn.close()
 
-    # Google Sheets: ставимо дату здачі в останній непорожній блок
     update_google_sheet(
         territory_id=territory_id,
         taken_by="",
         date_taken="",
-        date_due=datetime.now().strftime('%d.%m.%Y'),
+        date_due=datetime.now().strftime('%d.%м.%Y'),
         returned=True
     )
 
     return redirect(url_for('index'))
-
 
 @app.route('/clear/<int:territory_id>', methods=['POST'])
 def clear_territory(territory_id):
     if not session.get('logged_in'):
         return redirect(url_for('login'))
 
-    # Очищення в БД
     conn = sqlite3.connect('territories.db')
     c = conn.cursor()
     c.execute("""
@@ -194,11 +200,8 @@ def clear_territory(territory_id):
     conn.commit()
     conn.close()
 
-    # Очищення в Google Sheets
     clear_google_sheet(territory_id)
-
     return redirect(url_for('update_territory', territory_id=territory_id))
-
 
 if __name__ == '__main__':
     init_db()
