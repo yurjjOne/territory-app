@@ -6,6 +6,8 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .form-container { margin-bottom: 20px; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 4px 0; }
     </style>
 </head>
 <body>
@@ -18,8 +20,18 @@
             <a href="{{ url_for('index') }}">Повернутися</a>
         </form>
     </div>
-    <p>Статус: {{ territory[2] }}</p>
-    <p>Дата видачі: {{ territory[4] or 'Немає' }}</p>
-    <p>Дата здачі: {{ territory[5] or 'Немає' }}</p>
+
+    <p>📌 Статус: <strong>{{ territory[2] }}</strong></p>
+    <p>📅 Дата видачі: <strong>{{ territory[4] or 'Немає' }}</strong></p>
+    <p>📅 Дата здачі: <strong>{{ territory[5] or 'Немає' }}</strong></p>
+
+    <h3>🕓 Історія останніх 5 записів:</h3>
+    <ul>
+        {% for h in history %}
+            <li>🔸 {{ h[0] }} — {{ h[1] }} → {{ h[2] }}</li>
+        {% else %}
+            <li>— Немає історії —</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
