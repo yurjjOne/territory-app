@@ -2,9 +2,8 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Облік територій</title>
+  <title>Території</title>
   <style>
-<<<<<<< HEAD
     body { 
       font-family: Arial, sans-serif; 
       margin: 0;
@@ -19,283 +18,163 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    h1 { 
+    h1 {
       color: #333;
       margin-bottom: 30px;
       padding-bottom: 10px;
       border-bottom: 2px solid #eee;
     }
-    table { 
-      border-collapse: collapse; 
-      width: 100%; 
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      color: #444;
       margin-bottom: 20px;
-      background: white;
+      font-size: 1.5em;
+    }
+    .territory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .territory-card {
+      background: #fff;
+      border: 1px solid #ddd;
       border-radius: 8px;
-      overflow: hidden;
+      padding: 15px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    th, td { 
-      border: 1px solid #eee; 
-      padding: 12px; 
-      text-align: left; 
+    .territory-card.overdue {
+      border-color: #ff4444;
     }
-    th { 
-      background-color: #f8f9fa;
-      font-weight: 600;
+    .territory-card h3 {
+      margin: 0 0 10px 0;
       color: #333;
     }
-    .taken-row { background-color: #fff4f4; }
-    .free-row  { background-color: #f4fff4; }
-    .overdue   { 
-      background-color: #ffdddd;
-      position: relative;
+    .territory-info {
+      margin-bottom: 10px;
+      color: #666;
     }
-    .overdue::after {
-      content: "⚠️";
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
+    .territory-info p {
+      margin: 5px 0;
     }
-    .section-header { 
-      display: flex; 
-      align-items: center; 
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .section-header h2 {
-      margin: 0;
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .section-header label { 
-      display: flex; 
-      align-items: center; 
-      gap: 8px;
-      cursor: pointer;
-      padding: 8px 12px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    }
-    .section-header label:hover {
-      background: #e9ecef;
-    }
-    .section-header input[type="checkbox"] { 
-      width: 16px;
-      height: 16px;
-      margin: 0;
+    .territory-notes {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-style: italic;
+      color: #666;
     }
     .btn {
-      padding: 6px 12px;
+      display: inline-block;
+      padding: 8px 16px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
       text-decoration: none;
+      font-size: 14px;
       transition: background-color 0.2s;
+      margin-right: 10px;
+      margin-bottom: 10px;
     }
-    .btn-edit {
+    .btn-primary {
       background: #4CAF50;
       color: white;
     }
-    .btn-edit:hover {
+    .btn-primary:hover {
       background: #45a049;
     }
-    .btn-return {
-      background: #ff5252;
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    .btn-danger {
+      background: #ff4444;
       color: white;
     }
-    .btn-return:hover {
-      background: #ff3939;
+    .btn-danger:hover {
+      background: #cc0000;
     }
-    .btn-clear {
-      background: #aaa;
-      color: white;
+    .overdue-date {
+      color: #ff4444;
+      font-weight: bold;
     }
-    .btn-clear:hover {
-      background: #999;
-    }
-    .actions {
+    .header-actions {
       display: flex;
-      gap: 8px;
+      justify-content: space-between;
       align-items: center;
-    }
-    form {
-      margin: 0;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Облік територій</h1>
-
-    <!-- Опрацьовують (Взято) -->
-    <div class="section-header">
-      <h2>🔴 Опрацьовують (Взято)</h2>
-      <label>
-        <input type="checkbox" id="showTaken" checked
-               onchange="toggleSection('taken', this.checked)">
-        Показати
-      </label>
+    <div class="header-actions">
+      <h1>Території</h1>
+      <a href="{{ url_for('login') }}" class="btn btn-secondary">Вийти</a>
     </div>
-    <table id="taken">
-      <thead>
-        <tr>
-          <th>Номер</th>
-          <th>Назва</th>
-          <th>Хто взяв</th>
-          <th>Дата видачі</th>
-          <th>Дата здачі</th>
-          <th>Дія</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r, due_flag in taken %}
-        <tr class="taken-row">
-          <td>{{ r[0] }}</td>
-          <td>{{ r[1] }}</td>
-          <td>{{ r[3] }}</td>
-          <td{% if due_flag %} class="overdue"{% endif %}>{{ r[4] }}</td>
-          <td>{{ r[5] or '—' }}</td>
-          <td class="actions">
-            <a href="{{ url_for('update_territory', territory_id=r[0]) }}" class="btn btn-edit">Редагувати</a>
-            <form method="POST"
-                  action="{{ url_for('release_territory', territory_id=r[0]) }}">
-              <button type="submit" class="btn btn-return">Здано</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
 
-    <!-- Вільні -->
-    <div class="section-header">
-      <h2>🟢 Вільні</h2>
-      <label>
-        <input type="checkbox" id="showFree" checked
-               onchange="toggleSection('free', this.checked)">
-        Показати
-      </label>
+    <div class="section">
+      <h2 class="section-title">Взяті території ({{ taken|length }})</h2>
+      <div class="territory-grid">
+        {% for territory, is_overdue in taken %}
+        <div class="territory-card {% if is_overdue %}overdue{% endif %}">
+          <h3>{{ territory[1] }}</h3>
+          <div class="territory-info">
+            <p><strong>Взято:</strong> {{ territory[3] }}</p>
+            <p><strong>Дата видачі:</strong> {{ territory[4] }}</p>
+            <p><strong>Планова дата здачі:</strong> 
+              <span {% if is_overdue %}class="overdue-date"{% endif %}>
+                {{ territory[5] }}
+              </span>
+            </p>
+            {% if territory[6] %}
+            <div class="territory-notes">
+              <strong>Примітки:</strong><br>
+              {{ territory[6] }}
+            </div>
+            {% endif %}
+          </div>
+          {% if is_admin %}
+          <form action="{{ url_for('release_territory', territory_id=territory[0]) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-danger">Звільнити</button>
+          </form>
+          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
+          {% else %}
+          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-secondary">Переглянути</a>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
     </div>
-    <table id="free">
-      <thead>
-        <tr>
-          <th>Номер</th>
-          <th>Назва</th>
-          <th>Дія</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in free %}
-        <tr class="free-row">
-          <td>{{ r[0] }}</td>
-          <td>{{ r[1] }}</td>
-          <td class="actions">
-            <a href="{{ url_for('update_territory', territory_id=r[0]) }}" class="btn btn-edit">Редагувати</a>
-            <form method="POST"
-                  action="{{ url_for('clear_territory', territory_id=r[0]) }}">
-              <button type="submit" class="btn btn-clear">Очистити</button>
-            </form>
-          </td>
-        </tr>
+
+    <div class="section">
+      <h2 class="section-title">Вільні території ({{ free|length }})</h2>
+      <div class="territory-grid">
+        {% for territory in free %}
+        <div class="territory-card">
+          <h3>{{ territory[1] }}</h3>
+          <div class="territory-info">
+            <p><strong>Статус:</strong> {{ territory[2] }}</p>
+            {% if territory[3] %}
+            <div class="territory-notes">
+              <strong>Примітки:</strong><br>
+              {{ territory[3] }}
+            </div>
+            {% endif %}
+          </div>
+          {% if is_admin %}
+          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
+          {% else %}
+          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-secondary">Переглянути</a>
+          {% endif %}
+        </div>
         {% endfor %}
-      </tbody>
-    </table>
+      </div>
+    </div>
   </div>
-
-=======
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .taken-row { background-color: #fff4f4; }
-    .free-row  { background-color: #f4fff4; }
-    .overdue   { background-color: #ffdddd; }
-    .toggles { margin-bottom: 20px; }
-    .toggles label { margin-right: 20px; cursor: pointer; }
-    button { background-color: #c9302c; color: white; border: none; padding: 5px 10px; cursor: pointer; }
-    button:hover { background-color: #ac2925; }
-  </style>
-</head>
-<body>
-  <h1>Облік територій</h1>
-
-  <!-- Чекбокси для сховання/показу секцій -->
-  <div class="toggles">
-    <label>
-      <input type="checkbox" id="showTaken" checked
-             onchange="toggleSection('taken', this.checked)">
-      Показати "Опрацьовують"
-    </label>
-    <label>
-      <input type="checkbox" id="showFree" checked
-             onchange="toggleSection('free', this.checked)">
-      Показати "Вільні"
-    </label>
-  </div>
-
-  <!-- Опрацьовують (Взято) -->
-  <h2>🔴 Опрацьовують (Взято)</h2>
-  <table id="taken">
-    <tr>
-      <th>Номер</th><th>Назва</th><th>Хто взяв</th>
-      <th>Дата видачі</th><th>Дата здачі</th><th>Дія</th>
-    </tr>
-    {% for r, due_flag in taken %}
-    <tr class="taken-row">
-      <td>{{ r[0] }}</td>
-      <td>{{ r[1] }}</td>
-      <td>{{ r[3] }}</td>
-      <td{% if due_flag %} class="overdue"{% endif %}>{{ r[4] }}</td>
-      <td>{{ r[5] or '—' }}</td>
-      <td>
-        <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
-        <form method="POST"
-              action="{{ url_for('release_territory', territory_id=r[0]) }}"
-              style="display:inline">
-          <button type="submit">Здано</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <!-- Вільні -->
-  <h2>🟢 Вільні</h2>
-  <table id="free">
-    <tr>
-      <th>Номер</th><th>Назва</th><th>Дія</th>
-    </tr>
-    {% for r in free %}
-    <tr class="free-row">
-      <td>{{ r[0] }}</td>
-      <td>{{ r[1] }}</td>
-      <td>
-        <a href="{{ url_for('update_territory', territory_id=r[0]) }}">Редагувати</a>
-        <form method="POST"
-              action="{{ url_for('clear_territory', territory_id=r[0]) }}"
-              style="display:inline">
-          <button style="background:#aaa">Очистити</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-
->>>>>>> 85dc26e15f019e6a9092fc959c2cbce1a6c2131e
-  <script>
-    function toggleSection(id, show) {
-      document.getElementById(id).style.display = show ? '' : 'none';
-    }
-    // При першому завантаженні
-    document.addEventListener('DOMContentLoaded', () => {
-      toggleSection('taken', document.getElementById('showTaken').checked);
-      toggleSection('free', document.getElementById('showFree').checked);
-    });
-  </script>
 </body>
 </html>
