@@ -120,6 +120,7 @@ def get_territories_from_sheet():
         raise
 
 def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=False):
+    logger.info(f"[DEBUG] Виклик update_google_sheet для території {territory_id}")
     try:
         logger.info(f"Починаємо оновлення Google Sheet для території {territory_id}")
         logger.info(f"Параметри: taken_by={taken_by}, date_taken={date_taken}, returned={returned}")
@@ -225,6 +226,7 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
         raise
 
 def clear_google_sheet(territory_id):
+    logger.info(f"[DEBUG] Виклик clear_google_sheet для території {territory_id}")
     try:
         ensure_client()
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
