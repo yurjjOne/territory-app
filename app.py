@@ -301,6 +301,17 @@ def update_territory(territory_id):
                             """, (territory_id,))
 
                         conn.commit()
+                        # Додаємо оновлення Google Sheets
+                        try:
+                            update_google_sheet(
+                                territory_id=territory_id,
+                                taken_by=taken_by,
+                                date_taken=date_taken,
+                                date_due=date_due_planned,
+                                returned=False
+                            )
+                        except Exception as e:
+                            app.logger.error(f"Google Sheets error: {e}")
 
                     except Exception as e:
                         conn.rollback()
