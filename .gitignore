@@ -16,6 +16,7 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -24,22 +25,24 @@ var/
 venv/
 ENV/
 
-# Database
-*.db
-*.sqlite3
-
-# Logs
-*.log
-
-# Environment variables
-.env
-
-# IDE specific files
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-*~
+
+# Database
+*.db
+*.sqlite3
+
+# Environment variables
+.env
+
+# Google API credentials
+territory-app-461105-63213fbd8888.json
+
+# Logs
+*.log
 
 # OS specific files
 .DS_Store

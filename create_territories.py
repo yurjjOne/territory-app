@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS history (
 
 # Insert territories with basic information
 territories = []
-for i in range(1, 183):  # Changed to 183 to include territory 182
+for i in range(1, 183):  # 182 території
     territories.append((i, f"Територія {i}", f"Територія {i}", 'Вільна', '', '', '', ''))
 
 cursor.executemany('INSERT INTO territories (id, name, custom_name, status, taken_by, date_taken, date_due, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', territories)

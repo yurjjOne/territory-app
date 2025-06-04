@@ -28,7 +28,7 @@ def get_credentials():
             return json.loads(google_creds)
         else:
             # Якщо credentials у файлі
-            creds_file = "territory-app-461105-e5b14c010a91.json"
+            creds_file = "territory-app-461105-63213fbd8888.json"
             if os.path.exists(creds_file):
                 with open(creds_file, 'r') as f:
                     return json.load(f)
@@ -97,7 +97,7 @@ def get_territories_from_sheet():
                         try:
                             # Конвертуємо в ціле число
                             territory_id = int(float(value))
-                    territories.append(territory_id)
+                            territories.append(territory_id)
                         except ValueError:
                             logger.warning(f"Неправильний формат ID території: {value}")
             except IndexError:

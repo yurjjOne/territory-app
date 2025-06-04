@@ -63,6 +63,16 @@ def index():
         free = []
         
         for territory in territories:
+            territory_tuple = (
+                territory['id'],
+                territory['name'] or f"Територія {territory['id']}",
+                territory['status'],
+                territory['taken_by'],
+                territory['date_taken'],
+                territory['date_due'],
+                territory['notes']
+            )
+            
             if territory['status'] == 'Взято':
                 # Перевіряємо чи наближається дата здачі
                 due_date = datetime.strptime(territory['date_due'], '%d.%m.%Y') if territory['date_due'] else None
@@ -70,9 +80,9 @@ def index():
                 if due_date:
                     days_left = (due_date - datetime.now()).days
                     is_due_soon = days_left <= 10
-                taken.append((territory, is_due_soon))
+                taken.append((territory_tuple, is_due_soon))
             else:
-                free.append(territory)
+                free.append(territory_tuple)
         
         return render_template('index.html', 
                             taken=taken, 
