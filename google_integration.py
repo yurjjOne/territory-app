@@ -2,6 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import logging
 import os
+import json
 from datetime import datetime, timedelta
 
 # Налаштування логування
@@ -18,28 +19,40 @@ if not SPREADSHEET_ID:
     logger.warning("SPREADSHEET_ID не знайдено в змінних середовища. Використовуємо значення за замовчуванням.")
     SPREADSHEET_ID = "17bGUa7uyxFFJhCTp2UdDuydbFW1UyEN7WoqJ6VlbCig"
 
-CREDS_FILE = "territory-app-461105-e5b14c010a91.json"
+def get_credentials():
+    """Отримання credentials з змінної середовища або файлу"""
+    try:
+        google_creds = os.environ.get('GOOGLE_CREDENTIALS')
+        if google_creds:
+            # Якщо credentials в змінній середовища
+            return json.loads(google_creds)
+        else:
+            # Якщо credentials у файлі
+            creds_file = "territory-app-461105-e5b14c010a91.json"
+            if os.path.exists(creds_file):
+                with open(creds_file, 'r') as f:
+                    return json.load(f)
+            else:
+                raise FileNotFoundError(f"Файл з ключами {creds_file} не знайдено!")
+    except Exception as e:
+        logger.error(f"Помилка отримання credentials: {str(e)}")
+        raise
 
 def init_google_sheets():
     global client
     try:
         logger.info("Ініціалізація підключення до Google Sheets...")
         
-        # Перевіряємо наявність файлу з ключами
-        if not os.path.exists(CREDS_FILE):
-            error_msg = f"Файл з ключами {CREDS_FILE} не знайдено!"
-            logger.error(error_msg)
-            raise FileNotFoundError(error_msg)
-        
-        scope = [
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        
         try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, scope)
-        client = gspread.authorize(creds)
+            creds_dict = get_credentials()
+            scope = [
+                "https://spreadsheets.google.com/feeds",
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive"
+            ]
+            
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+            client = gspread.authorize(creds)
             logger.info("Авторизація успішна")
         except Exception as e:
             logger.error(f"Помилка авторизації: {str(e)}")
@@ -92,7 +105,7 @@ def get_territories_from_sheet():
                         try:
                             # Конвертуємо в ціле число
                             territory_id = int(float(value))
-                    territories.append(territory_id)
+                            territories.append(territory_id)
                         except ValueError:
                             logger.warning(f"Неправильний формат ID території: {value}")
             except IndexError:
@@ -118,7 +131,7 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
         try:
             territory_id = int(territory_id)
             row_base = 6 + (territory_id - 1)*2
-        vis_row, date_row = row_base, row_base + 1
+            vis_row, date_row = row_base, row_base + 1
         except ValueError as e:
             logger.error(f"Помилка конвертації territory_id: {e}")
             raise
@@ -182,10 +195,10 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
                 new_data = [[''] * 10, [''] * 10]
                 for i in range(2, 10, 2):
                     if i+1 < len(current_data[0]):
-                    new_data[0][i-2] = current_data[0][i]
+                        new_data[0][i-2] = current_data[0][i]
                         new_data[0][i-1] = current_data[0][i+1] if i+1 < len(current_data[0]) else ''
                     if i+1 < len(current_data[1]):
-                    new_data[1][i-2] = current_data[1][i]
+                        new_data[1][i-2] = current_data[1][i]
                         new_data[1][i-1] = current_data[1][i+1] if i+1 < len(current_data[1]) else ''
                 sheet.update(range_name, new_data, raw=False)
                 empty_block = 4  # Використовуємо останній блок

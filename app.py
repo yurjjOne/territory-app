@@ -269,7 +269,7 @@ def update_territory(territory_id):
                     else:
                         date_taken = now.strftime('%d.%m.%Y')
 
-                    # Для Google Sheets розраховуємо планову дату повернення
+                    # Для планової дати повернення
                     date_due_planned = (datetime.strptime(date_taken, '%d.%m.%Y') + timedelta(days=120)).strftime('%d.%m.%Y')
 
                     # Use transaction for multiple operations
@@ -287,7 +287,7 @@ def update_territory(territory_id):
                             c.execute("""
                                 INSERT INTO history (territory_id, taken_by, date_taken, date_due)
                                 VALUES (?, ?, ?, ?)
-                            """, (territory_id, taken_by, date_taken, ""))  # Порожня дата здачі, буде заповнена при поверненні
+                            """, (territory_id, taken_by, date_taken, ""))
 
                             # Keep only last 5 history records
                             c.execute("""
@@ -302,19 +302,6 @@ def update_territory(territory_id):
 
                         conn.commit()
 
-                        try:
-                            update_google_sheet(
-                                territory_id=territory_id,
-                                taken_by=taken_by,
-                                date_taken=date_taken,
-                                date_due=date_due_planned,
-                                returned=False
-                            )
-                        except Exception as e:
-                            app.logger.error(f"Google Sheets error: {e}")
-                            # Continue even if Google Sheets update fails
-                            pass
-
                     except Exception as e:
                         conn.rollback()
                         raise e
@@ -325,19 +312,6 @@ def update_territory(territory_id):
                         WHERE id=?
                     """, (notes, territory_id,))
                     conn.commit()
-
-                    try:
-                        update_google_sheet(
-                            territory_id=territory_id,
-                            taken_by="",
-                            date_taken="",
-                            date_due=datetime.now().strftime('%d.%m.%Y'),
-                            returned=True
-                        )
-                    except Exception as e:
-                        app.logger.error(f"Google Sheets error: {e}")
-                        # Continue even if Google Sheets update fails
-                        pass
 
             return redirect(url_for('index'))
         except Exception as e:
@@ -365,7 +339,11 @@ def update_territory(territory_id):
 
             # Передаємо поточну дату в шаблон
             now = datetime.now()
-            return render_template('update.html', territory=territory, history=history, now=now)
+            return render_template('update.html', 
+                                territory=territory, 
+                                history=history, 
+                                now=now,
+                                is_admin=(session.get('role') == 'admin'))
     except Exception as e:
         app.logger.error(f"Error fetching territory {territory_id}: {e}")
         return f"Помилка при отриманні даних території: {str(e)}", 500
