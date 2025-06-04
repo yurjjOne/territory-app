@@ -15,65 +15,28 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "MySecretKey2025"  # Тимчасово повернемо старе значення
-DATABASE = 'territories.db'
-CSV_FILE = 'облік територій.csv'
+DATABASE = os.path.join(os.getcwd(), 'territories.db')
+CSV_FILE = os.path.join(os.getcwd(), 'облік територій.csv')
 
-# Налаштування логування
+# Змінюємо налаштування логування для Vercel
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('app.log'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
-def load_territories_from_csv():
-    """Завантаження назв територій з CSV файлу"""
-    territories = {}
-    encodings = ['utf-8-sig', 'cp1251']  # Змінюємо порядок кодувань
-    
-    for encoding in encodings:
-        try:
-            with open(CSV_FILE, 'r', encoding=encoding) as file:
-                content = file.read()
-                if 'вул.' in content:  # Перевіряємо, чи текст читається правильно
-                    file.seek(0)  # Повертаємось на початок файлу
-                    csv_reader = csv.reader(file, delimiter=';')
-                    next(csv_reader)  # Пропускаємо заголовок
-                    for row in csv_reader:
-                        if row and len(row) >= 2 and row[0] and row[1]:  # Перевіряємо, що обидва поля не порожні
-                            try:
-                                # Конвертуємо ID території в ціле число
-                                territory_id = row[0].strip().replace(',', '.')
-                                # Якщо ID містить крапку, беремо тільки цілу частину
-                                territory_id = int(float(territory_id))
-                                custom_name = row[1].strip()
-                                if custom_name:  # Додаємо тільки якщо назва не порожня
-                                    territories[territory_id] = custom_name
-                                    logger.info(f"Завантажено територію {territory_id}: {custom_name}")
-                            except ValueError as e:
-                                logger.error(f"Помилка при обробці рядка CSV {row}: {e}")
-                                continue
-                    break  # Якщо успішно прочитали файл, виходимо з циклу
-                else:
-                    continue  # Якщо текст не читається правильно, пробуємо наступне кодування
-        except UnicodeDecodeError:
-            continue
-        except FileNotFoundError:
-            logger.warning(f"Файл {CSV_FILE} не знайдено")
-            break
-    
-    if not territories:
-        logger.error("Не вдалося правильно прочитати жодного запису з CSV файлу")
-    else:
-        logger.info(f"Всього завантажено {len(territories)} територій з CSV файлу")
-    
-    return territories
+# Додаємо перевірку наявності бази даних
+def ensure_db_exists():
+    if not os.path.exists(DATABASE):
+        init_db()
 
+# Модифікуємо функцію get_db
 @contextmanager
 def get_db() -> Generator[sqlite3.Connection, None, None]:
+    ensure_db_exists()
     conn = sqlite3.connect(DATABASE)
     try:
         yield conn
@@ -468,6 +431,55 @@ def clear_history(territory_id):
     except Exception as e:
         logger.error(f"Помилка при очищенні історії території {territory_id}: {str(e)}")
         return "Помилка при очищенні історії території", 500
+
+def load_territories_from_csv():
+    """Завантаження назв територій з CSV файлу"""
+    territories = {}
+    
+    # Якщо CSV файл не існує, повертаємо порожній словник
+    if not os.path.exists(CSV_FILE):
+        logger.warning(f"Файл {CSV_FILE} не знайдено")
+        return territories
+        
+    encodings = ['utf-8-sig', 'cp1251']
+    
+    for encoding in encodings:
+        try:
+            with open(CSV_FILE, 'r', encoding=encoding) as file:
+                content = file.read()
+                if 'вул.' in content:  # Перевіряємо, чи текст читається правильно
+                    file.seek(0)  # Повертаємось на початок файлу
+                    csv_reader = csv.reader(file, delimiter=';')
+                    next(csv_reader)  # Пропускаємо заголовок
+                    for row in csv_reader:
+                        if row and len(row) >= 2 and row[0] and row[1]:  # Перевіряємо, що обидва поля не порожні
+                            try:
+                                # Конвертуємо ID території в ціле число
+                                territory_id = row[0].strip().replace(',', '.')
+                                # Якщо ID містить крапку, беремо тільки цілу частину
+                                territory_id = int(float(territory_id))
+                                custom_name = row[1].strip()
+                                if custom_name:  # Додаємо тільки якщо назва не порожня
+                                    territories[territory_id] = custom_name
+                                    logger.info(f"Завантажено територію {territory_id}: {custom_name}")
+                            except ValueError as e:
+                                logger.error(f"Помилка при обробці рядка CSV {row}: {e}")
+                                continue
+                    break  # Якщо успішно прочитали файл, виходимо з циклу
+                else:
+                    continue  # Якщо текст не читається правильно, пробуємо наступне кодування
+        except UnicodeDecodeError:
+            continue
+        except FileNotFoundError:
+            logger.warning(f"Файл {CSV_FILE} не знайдено")
+            break
+    
+    if not territories:
+        logger.error("Не вдалося правильно прочитати жодного запису з CSV файлу")
+    else:
+        logger.info(f"Всього завантажено {len(territories)} територій з CSV файлу")
+    
+    return territories
 
 if __name__ == '__main__':
     init_db()
