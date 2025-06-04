@@ -125,6 +125,40 @@
             color: #888;
             font-style: italic;
         }
+        .history-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-clear-small {
+            padding: 2px 8px;
+            font-size: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #dc3545;
+        }
+        .btn-clear-small:hover {
+            opacity: 0.8;
+        }
+        .history-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .history-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 10px;
+        }
+        .history-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .history-list li:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
@@ -155,11 +189,6 @@
                 <div class="buttons-container">
                     <button type="submit" class="btn btn-primary">Зберегти</button>
                     <a href="{{ url_for('index') }}" class="btn btn-secondary">Повернутися</a>
-                    <form method="POST"
-                          action="{{ url_for('clear_territory', territory_id=territory[0]) }}"
-                          style="display: inline;">
-                        <button type="submit" class="btn btn-clear">Очистити всі записи</button>
-                    </form>
                 </div>
             </form>
         </div>
@@ -192,18 +221,25 @@
             {% endif %}
         </div>
 
+        {% if history %}
         <div class="history-section">
-            <h3>🕓 Історія останніх 5 записів:</h3>
+            <div class="history-header">
+                <h3>📋 Історія останніх 5 записів:</h3>
+                {% if is_admin %}
+                <form method="POST" action="{{ url_for('clear_history', territory_id=territory[0]) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-clear-small" title="Очистити історію">🗑️</button>
+                </form>
+                {% endif %}
+            </div>
             <ul class="history-list">
-                {% for h in history %}
-                    <li class="history-item">
-                        {{ h[0] }} — {{ h[1] }}{% if h[2] %} — {{ h[2] }}{% endif %}
-                    </li>
-                {% else %}
-                    <li class="empty-history">— Немає історії —</li>
+                {% for record in history %}
+                <li>
+                    {{ record[0] }} — {{ record[1] }}{% if record[2] %} — {{ record[2] }}{% endif %}
+                </li>
                 {% endfor %}
             </ul>
         </div>
+        {% endif %}
 
         {% if not is_admin %}
         <div class="buttons-container">

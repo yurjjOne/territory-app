@@ -116,14 +116,14 @@ def get_territories_from_sheet():
         return territories
     except Exception as e:
         logger.error(f"Помилка при отриманні списку територій: {str(e)}")
-        logger.exception("Деталі помилки:")
+        logger.exception("Детальна інформація про помилку:")
         raise
 
 def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=False):
-    logger.info(f"[DEBUG] Виклик update_google_sheet для території {territory_id}")
+    logger.info(f"[ВІДЛАГОДЖЕННЯ] Оновлення даних для території {territory_id}")
     try:
         logger.info(f"Починаємо оновлення Google Sheet для території {territory_id}")
-        logger.info(f"Параметри: taken_by={taken_by}, date_taken={date_taken}, returned={returned}")
+        logger.info(f"Параметри: взяв={taken_by}, дата_взяття={date_taken}, повернуто={returned}")
         
         ensure_client()
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
@@ -137,7 +137,7 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
             logger.error(f"Помилка конвертації territory_id: {e}")
             raise
         
-        logger.info(f"Рядки для оновлення: vis_row={vis_row}, date_row={date_row}")
+        logger.info(f"Рядки для оновлення: рядок_видачі={vis_row}, рядок_дати={date_row}")
         
         try:
             # Отримуємо поточні дані
@@ -146,7 +146,7 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
             
             logger.info(f"Отримані поточні дані: {current_data}")
             
-            # Перевіряємо та ініціалізуємо дані якщо вони порожні
+            # Ініціалізуємо дані якщо вони порожні
             if not current_data:
                 current_data = [[''] * 10, [''] * 10]
             elif len(current_data) < 2:
@@ -179,39 +179,36 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
                 return
 
             # Для нового призначення території
-            # Шукаємо перший порожній блок або блок після останнього з датою повернення
+            # Шукаємо перший порожній блок
             empty_block = -1
             for i in range(0, 10, 2):
-                if i >= len(current_data[0]) or not current_data[0][i] or (
-                    i > 0 and
-                    i-1 < len(current_data[1]) and
-                    current_data[1][i-1] and
-                    (i >= len(current_data[0]) or not current_data[0][i])
-                ):
+                if i >= len(current_data[0]) or not current_data[0][i]:
                     empty_block = i // 2
                     break
 
-            if empty_block == -1:
-                # Якщо немає порожніх блоків, зсуваємо все вліво і використовуємо останній блок
+            if empty_block == -1 or empty_block >= 5:  # Якщо немає місця або досягли останнього блоку
+                logger.info("Зсуваємо історію вліво")
+                # Зсуваємо всі записи на один блок вліво
                 new_data = [[''] * 10, [''] * 10]
-                for i in range(2, 10, 2):
-                    if i+1 < len(current_data[0]):
-                        new_data[0][i-2] = current_data[0][i]
+                for i in range(2, 10, 2):  # Копіюємо з другого блоку до кінця
+                    if i < len(current_data[0]):
+                        new_data[0][i-2] = current_data[0][i]  # Копіюємо ім'я
                         new_data[0][i-1] = current_data[0][i+1] if i+1 < len(current_data[0]) else ''
-                    if i+1 < len(current_data[1]):
-                        new_data[1][i-2] = current_data[1][i]
+                        new_data[1][i-2] = current_data[1][i]  # Копіюємо дату взяття
                         new_data[1][i-1] = current_data[1][i+1] if i+1 < len(current_data[1]) else ''
+                
+                # Оновлюємо весь діапазон
                 sheet.update(range_name, new_data, raw=False)
                 empty_block = 4  # Використовуємо останній блок
-
-            logger.info(f"Знайдено порожній блок: {empty_block}")
+                logger.info("Історію зсунуто вліво")
 
             # Оновлюємо порожній блок
             col_start = chr(ord('C') + empty_block*2)
-            range_name = f'{col_start}{vis_row}:{chr(ord(col_start)+1)}{date_row}'
+            col_end = chr(ord('C') + empty_block*2 + 1)
+            update_range = f'{col_start}{vis_row}:{col_end}{date_row}'
             values = [[taken_by, ''], [date_taken, '']]
-            sheet.update(range_name, values, raw=False)
-            logger.info(f"Дані успішно записано в діапазон {range_name}")
+            sheet.update(update_range, values, raw=False)
+            logger.info(f"Додано новий запис в діапазон {update_range}")
 
         except gspread.exceptions.APIError as e:
             logger.error(f"Помилка API Google Sheets: {str(e)}")
@@ -222,32 +219,64 @@ def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=F
             
     except Exception as e:
         logger.error(f"Помилка при оновленні Google Sheet для території {territory_id}: {str(e)}")
-        logger.exception("Деталі помилки:")
+        logger.exception("Детальна інформація про помилку:")
         raise
 
 def clear_google_sheet(territory_id):
-    logger.info(f"[DEBUG] Виклик clear_google_sheet для території {territory_id}")
+    logger.info(f"[ВІДЛАГОДЖЕННЯ] Починаємо очищення всіх даних для території {territory_id}")
     try:
         ensure_client()
-        sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        sheet = spreadsheet.sheet1
         
-        # Convert to integer for range calculation
-        row_base = 6 + (int(territory_id) - 1)*2
+        # Конвертуємо в ціле число для розрахунку діапазону
+        territory_id = int(territory_id)
+        row_base = 6 + (territory_id - 1)*2
         vis_row, date_row = row_base, row_base + 1
         
-        updates = []
-        for i in range(5):
-            col = 3 + i*2
-            updates.extend([
-                gspread.Cell(row=vis_row, col=col, value=""),
-                gspread.Cell(row=date_row, col=col, value=""),
-                gspread.Cell(row=date_row, col=col+1, value="")
-            ])
+        # Очищаємо весь діапазон від C до L
+        range_name = f'C{vis_row}:L{date_row}'
+        logger.info(f"Спроба очистити діапазон {range_name}")
         
-        sheet.update_cells(updates)
-        logger.info(f"Успішно очищено дані для території {territory_id}")
+        try:
+            # Створюємо порожній діапазон значень
+            empty_values = [
+                ['', '', '', '', '', '', '', '', '', ''],  # 10 пустих значень для першого рядка
+                ['', '', '', '', '', '', '', '', '', '']   # 10 пустих значень для другого рядка
+            ]
+            
+            # Спочатку спробуємо прямий метод оновлення
+            sheet.update(range_name, empty_values, value_input_option='RAW')
+            logger.info("Застосовано прямий метод очищення")
+            
+            # Перевіряємо, чи очистилось
+            values = sheet.get_values(range_name)
+            if values and any(any(cell for cell in row) for row in values):
+                logger.info("Спроба альтернативного методу очищення...")
+                
+                # Спробуємо метод batch_clear
+                sheet.batch_clear([range_name])
+                logger.info("Застосовано batch_clear")
+                
+                # Перевіряємо ще раз
+                values = sheet.get_values(range_name)
+                if values and any(any(cell for cell in row) for row in values):
+                    # Якщо все ще є значення, спробуємо ще один метод
+                    sheet_name = sheet.title
+                    full_range = f"'{sheet_name}'!{range_name}"
+                    spreadsheet.values_clear(full_range)
+                    logger.info("Застосовано values_clear")
+            
+            logger.info(f"Успішно очищено всі дані для території {territory_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Помилка при очищенні діапазону: {str(e)}")
+            raise
+            
     except Exception as e:
-        logger.error(f"Помилка при очищенні даних території {territory_id}: {e}")
+        logger.error(f"Критична помилка при очищенні даних території {territory_id}: {str(e)}")
+        logger.exception("Детальна інформація про помилку:")
         raise
 
 # Ініціалізуємо клієнт при імпорті модуля

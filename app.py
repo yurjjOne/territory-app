@@ -21,7 +21,11 @@ CSV_FILE = 'облік територій.csv'
 # Налаштування логування
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
 )
 logger = logging.getLogger(__name__)
 
@@ -430,43 +434,39 @@ def release_territory(territory_id):
         app.logger.error(f"Error releasing territory {territory_id}: {e}")
         return "Помилка при звільненні території", 500
 
-@app.route('/clear/<territory_id>', methods=['POST'])
-def clear_territory(territory_id):
+@app.route('/clear_history/<territory_id>', methods=['POST'])
+def clear_history(territory_id):
+    logger.info(f"[ВІДЛАГОДЖЕННЯ] Починаємо очищення історії території {territory_id}")
+    
     if not session.get('logged_in') or session.get('role') != 'admin':
+        logger.warning(f"Спроба очищення історії території {territory_id} без прав адміністратора")
         return "Немає прав для цієї дії", 403
 
     try:
         territory_id = float(territory_id)
+        logger.info(f"Конвертовано territory_id в число: {territory_id}")
     except ValueError:
+        logger.error(f"Неможливо конвертувати territory_id: {territory_id}")
         return "Неправильний формат номера території", 400
 
     try:
         with get_db() as conn:
             c = conn.cursor()
             
-            # Check if territory exists
+            # Перевіряємо чи територія існує
             c.execute("SELECT 1 FROM territories WHERE id=?", (territory_id,))
             if not c.fetchone():
+                logger.error(f"Територію {territory_id} не знайдено в базі даних")
                 return "Територію не знайдено", 404
 
-            # Use transaction for multiple operations
-            c.execute('BEGIN TRANSACTION')
-            try:
-                c.execute("""
-                    UPDATE territories
-                    SET status='Вільна', taken_by='', date_taken='', date_due=''
-                    WHERE id=?
-                """, (territory_id,))
-                c.execute("DELETE FROM history WHERE territory_id=?", (territory_id,))
-                conn.commit()
-            except Exception as e:
-                conn.rollback()
-                raise e
-
-        clear_google_sheet(territory_id)
+            # Очищаємо тільки історію
+            c.execute("DELETE FROM history WHERE territory_id=?", (territory_id,))
+            logger.info(f"Очищено історію території {territory_id}")
+            conn.commit()
+            
         return redirect(url_for('update_territory', territory_id=territory_id))
     except Exception as e:
-        app.logger.error(f"Error clearing territory {territory_id}: {e}")
+        logger.error(f"Помилка при очищенні історії території {territory_id}: {str(e)}")
         return "Помилка при очищенні історії території", 500
 
 if __name__ == '__main__':

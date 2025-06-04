@@ -28,15 +28,19 @@ ENV/
 *.db
 *.sqlite3
 
+# Logs
+*.log
+
 # Environment variables
 .env
 
-# IDE
+# IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
-# OS
+# OS specific files
 .DS_Store
 Thumbs.db 
