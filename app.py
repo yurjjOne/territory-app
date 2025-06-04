@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import hashlib
 from dotenv import load_dotenv
 import logging
-from sheets_db import SheetsDB
+from db_factory import DBFactory
 
 # Load environment variables
 load_dotenv()
@@ -22,8 +22,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Ініціалізуємо підключення до Google Sheets
-db = SheetsDB()
+# Замінюємо створення db на використання фабрики
+db = DBFactory.get_db()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

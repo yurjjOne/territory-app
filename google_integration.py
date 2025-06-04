@@ -22,7 +22,7 @@ if not SPREADSHEET_ID:
 def get_credentials():
     """Отримання credentials з змінної середовища або файлу"""
     try:
-        google_creds = os.environ.get('GOOGLE_CREDENTIALS')
+        google_creds = os.environ.get('GOOGLE_SHEETS_CREDENTIALS')
         if google_creds:
             # Якщо credentials в змінній середовища
             return json.loads(google_creds)
@@ -42,22 +42,15 @@ def init_google_sheets():
     global client
     try:
         logger.info("Ініціалізація підключення до Google Sheets...")
-        
-        try:
-            creds_dict = get_credentials()
-            scope = [
-                "https://spreadsheets.google.com/feeds",
-                "https://www.googleapis.com/auth/spreadsheets",
-                "https://www.googleapis.com/auth/drive"
-            ]
-            
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-            client = gspread.authorize(creds)
-            logger.info("Авторизація успішна")
-        except Exception as e:
-            logger.error(f"Помилка авторизації: {str(e)}")
-            raise
-        
+        creds_dict = get_credentials()
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+        logger.info("Авторизація успішна")
         # Перевіряємо доступ до таблиці
         try:
             sheet = client.open_by_key(SPREADSHEET_ID).sheet1
@@ -69,7 +62,6 @@ def init_google_sheets():
         except Exception as e:
             logger.error(f"Помилка доступу до таблиці: {str(e)}")
             raise
-            
     except Exception as e:
         logger.error(f"Помилка ініціалізації Google Sheets: {str(e)}")
         client = None
@@ -105,7 +97,7 @@ def get_territories_from_sheet():
                         try:
                             # Конвертуємо в ціле число
                             territory_id = int(float(value))
-                            territories.append(territory_id)
+                    territories.append(territory_id)
                         except ValueError:
                             logger.warning(f"Неправильний формат ID території: {value}")
             except IndexError:
