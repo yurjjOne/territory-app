@@ -3,151 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Території</title>
-  <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 0;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    h1 {
-      color: #333;
-      margin-bottom: 30px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #eee;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .section-title {
-      color: #444;
-      margin-bottom: 20px;
-      font-size: 1.5em;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .territory-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    .territory-card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    .territory-number {
-      position: absolute;
-      top: -10px;
-      left: -10px;
-      width: 24px;
-      height: 24px;
-      background: #4CAF50;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    .territory-card.overdue {
-      border-color: #ff4444;
-    }
-    .territory-card h3 {
-      margin: 0 0 10px 0;
-      color: #333;
-      padding-left: 15px;
-    }
-    .territory-info {
-      margin-bottom: 10px;
-      color: #666;
-    }
-    .territory-info p {
-      margin: 5px 0;
-    }
-    .territory-notes {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #eee;
-      font-style: italic;
-      color: #666;
-    }
-    .btn {
-      display: inline-block;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 14px;
-      transition: background-color 0.2s;
-      margin-right: 10px;
-      margin-bottom: 10px;
-    }
-    .btn-primary {
-      background: #4CAF50;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #45a049;
-    }
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
-    .btn-secondary:hover {
-      background: #e0e0e0;
-    }
-    .btn-danger {
-      background: #ff4444;
-      color: white;
-    }
-    .btn-danger:hover {
-      background: #cc0000;
-    }
-    .overdue-date {
-      color: #ff4444;
-      font-weight: bold;
-    }
-    .header-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .toggle {
-      width: 24px;
-      height: 24px;
-      background-color: #4CAF50;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      flex-shrink: 0;
-    }
-    .toggle:hover {
-      transform: scale(1.05);
-    }
-    .toggle.inactive {
-      background-color: #ccc;
-    }
-    .territory-grid.hidden {
-      display: none;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <div class="container">
@@ -163,29 +19,31 @@
       </h2>
       <div class="territory-grid" id="takenGrid">
         {% for territory, is_overdue in taken %}
-        <div class="territory-card {% if is_overdue %}overdue{% endif %}">
+        <div class="territory-card taken {% if is_overdue %}overdue{% endif %}">
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
-            <p><strong>Взято:</strong> {{ territory[3] }}</p>
-            <p><strong>Дата видачі:</strong> {{ territory[4] }}</p>
-            <p><strong>Планова дата здачі:</strong> 
+            <p><strong>👤 Взято:</strong> {{ territory[3] }}</p>
+            <p><strong>📅 Дата видачі:</strong> {{ territory[4] }}</p>
+            <p><strong>📆 Планова дата здачі:</strong> 
               <span {% if is_overdue %}class="overdue-date"{% endif %}>
                 {{ territory[5] }}
               </span>
             </p>
             {% if not is_admin and territory[6] %}
             <div class="territory-notes">
-              <strong>Примітки:</strong><br>
+              <strong>📝 Примітки:</strong><br>
               {{ territory[6] }}
             </div>
             {% endif %}
           </div>
           {% if is_admin %}
-          <form action="{{ url_for('release_territory', territory_id=territory[0]) }}" method="POST" style="display: inline;">
-            <button type="submit" class="btn btn-danger">Звільнити</button>
-          </form>
-          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
+          <div class="button-group">
+            <form action="{{ url_for('release_territory', territory_id=territory[0]) }}" method="POST" style="display: inline;">
+              <button type="submit" class="btn btn-danger">Звільнити</button>
+            </form>
+            <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
+          </div>
           {% else %}
           <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-secondary">Переглянути</a>
           {% endif %}
@@ -201,15 +59,15 @@
       </h2>
       <div class="territory-grid" id="freeGrid">
         {% for territory in free %}
-        <div class="territory-card">
+        <div class="territory-card free">
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
-            <p><strong>Статус:</strong> {{ territory[2] }}</p>
-            {% if not is_admin and territory[3] %}
+            <p><strong>📋 Статус:</strong> {{ territory[2] }}</p>
+            {% if not is_admin and territory[6] %}
             <div class="territory-notes">
-              <strong>Примітки:</strong><br>
-              {{ territory[3] }}
+              <strong>📝 Примітки:</strong><br>
+              {{ territory[6] }}
             </div>
             {% endif %}
           </div>
@@ -225,20 +83,15 @@
   </div>
 
   <script>
-    function setupToggle(toggleId, gridId) {
-      const toggle = document.getElementById(toggleId);
-      const grid = document.getElementById(gridId);
-      let isActive = true;
+    document.getElementById('toggleTaken').addEventListener('click', function() {
+      this.classList.toggle('inactive');
+      document.getElementById('takenGrid').classList.toggle('hidden');
+    });
 
-      toggle.addEventListener('click', function() {
-        isActive = !isActive;
-        grid.classList.toggle('hidden', !isActive);
-        toggle.classList.toggle('inactive', !isActive);
-      });
-    }
-
-    setupToggle('toggleTaken', 'takenGrid');
-    setupToggle('toggleFree', 'freeGrid');
+    document.getElementById('toggleFree').addEventListener('click', function() {
+      this.classList.toggle('inactive');
+      document.getElementById('freeGrid').classList.toggle('hidden');
+    });
   </script>
 </body>
 </html>

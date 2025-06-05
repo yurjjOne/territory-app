@@ -1,0 +1,321 @@
+/* General styles */
+body { 
+    font-family: Arial, sans-serif; 
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Headers */
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+/* Territory cards */
+.territory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.territory-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect for territory cards */
+.territory-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Status-based borders */
+.territory-card.taken {
+    border: 2px solid #ff4444;
+}
+
+.territory-card.free {
+    border: 2px solid #4CAF50;
+}
+
+.territory-number {
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    width: 30px;
+    height: 30px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.territory-card.taken .territory-number {
+    background: #ff4444;
+}
+
+/* Territory info */
+.territory-info {
+    margin: 15px 0;
+    color: #444;
+}
+
+.territory-info p {
+    margin: 8px 0;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.territory-info strong {
+    color: #333;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.territory-notes {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-style: italic;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Labels with emoji */
+label, h2 {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+}
+
+/* History items */
+.history-item p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-item p strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Emoji sizing */
+.emoji {
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #ff4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #ff3333;
+    transform: translateY(-1px);
+}
+
+/* Form styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="date"],
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+    border-color: #4CAF50;
+    outline: none;
+}
+
+textarea {
+    height: 120px;
+    resize: vertical;
+}
+
+/* History section */
+.history-section {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+
+.history-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #4CAF50;
+}
+
+.history-item p {
+    margin: 8px 0;
+    color: #555;
+}
+
+/* Status labels */
+.status-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-free {
+    background: #4CAF50;
+    color: white;
+}
+
+.status-taken {
+    background: #ff4444;
+    color: white;
+}
+
+/* Overdue indicators */
+.overdue-date {
+    color: #ff4444;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+/* Toggle buttons */
+.toggle {
+    width: 30px;
+    height: 30px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.toggle:hover {
+    transform: scale(1.1);
+}
+
+.toggle.inactive {
+    background-color: #ccc;
+}
+
+/* Section headers */
+.section-title {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Header actions */
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .territory-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Hidden elements */
+.hidden {
+    display: none !important;
+} 

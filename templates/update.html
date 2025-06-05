@@ -3,123 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Редагування території</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: bold;
-        }
-        input[type="text"],
-        input[type="date"],
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            margin-right: 10px;
-        }
-        .btn-primary {
-            background: #4CAF50;
-            color: white;
-        }
-        .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-        }
-        .btn-danger {
-            background: #ff4444;
-            color: white;
-        }
-        .history-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        .history-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-        .history-item p {
-            margin: 5px 0;
-            color: #666;
-        }
-        .status-label {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .status-free {
-            background: #4CAF50;
-            color: white;
-        }
-        .status-taken {
-            background: #ff9800;
-            color: white;
-        }
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .trash-icon {
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #ff4444;
-            padding: 5px;
-        }
-        .trash-icon:hover {
-            opacity: 0.8;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
@@ -128,66 +12,71 @@
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Назад</a>
         </div>
 
-        <div class="form-group">
-            <label>Назва:</label>
-            <p>{{ territory['name'] }}</p>
-        </div>
-
-        <div class="form-group">
-            <label>Статус:</label>
-            <span class="status-label {% if territory['status'] == 'Вільна' %}status-free{% else %}status-taken{% endif %}">
-                {{ territory['status'] }}
-            </span>
-        </div>
-
-        {% if is_admin %}
-        <form method="POST">
+        <div class="territory-info-section">
             <div class="form-group">
-                <label for="taken_by">Взято (ім'я):</label>
-                <input type="text" id="taken_by" name="taken_by" value="{{ territory['taken_by'] }}">
+                <label>Назва:</label>
+                <p class="info-text">{{ territory['name'] }}</p>
             </div>
 
             <div class="form-group">
-                <label for="date_taken">Дата видачі:</label>
-                <input type="date" id="date_taken" name="date_taken" 
-                       value="{{ territory['date_taken'].split('.')[2] }}-{{ territory['date_taken'].split('.')[1] }}-{{ territory['date_taken'].split('.')[0] if territory['date_taken'] else '' }}">
+                <label>Статус:</label>
+                <span class="status-label {% if territory['status'] == 'Вільна' %}status-free{% else %}status-taken{% endif %}">
+                    {{ territory['status'] }}
+                </span>
             </div>
 
-            <div class="form-group">
-                <label for="notes">Примітки:</label>
-                <textarea id="notes" name="notes">{{ territory['notes'] }}</textarea>
+            {% if is_admin %}
+            <form method="POST" class="edit-form">
+                <div class="form-group">
+                    <label for="taken_by">👤 Взято (ім'я):</label>
+                    <input type="text" id="taken_by" name="taken_by" value="{{ territory['taken_by'] }}" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="date_taken">📅 Дата видачі:</label>
+                    <input type="date" id="date_taken" name="date_taken" 
+                           value="{{ territory['date_taken'].split('.')[2] }}-{{ territory['date_taken'].split('.')[1] }}-{{ territory['date_taken'].split('.')[0] if territory['date_taken'] else '' }}"
+                           class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">📝 Примітки:</label>
+                    <textarea id="notes" name="notes" class="form-control">{{ territory['notes'] }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+            </form>
+            {% else %}
+            <div class="view-info">
+                <div class="form-group">
+                    <label>👤 Взято:</label>
+                    <p class="info-text">{{ territory['taken_by'] or 'Не взято' }}</p>
+                </div>
+
+                {% if territory['status'] == 'Взято' %}
+                <div class="form-group">
+                    <label>📅 Дата видачі:</label>
+                    <p class="info-text">{{ territory['date_taken'] }}</p>
+                </div>
+                <div class="form-group">
+                    <label>📆 Планова дата здачі:</label>
+                    <p class="info-text">{{ territory['date_due'] }}</p>
+                </div>
+                {% endif %}
+
+                {% if territory['notes'] %}
+                <div class="form-group">
+                    <label>📝 Примітки:</label>
+                    <p class="info-text notes">{{ territory['notes'] }}</p>
+                </div>
+                {% endif %}
             </div>
-
-            <button type="submit" class="btn btn-primary">Зберегти</button>
-        </form>
-        {% else %}
-        <div class="form-group">
-            <label>Взято:</label>
-            <p>{{ territory['taken_by'] or 'Не взято' }}</p>
+            {% endif %}
         </div>
-
-        {% if territory['status'] == 'Взято' %}
-        <div class="form-group">
-            <label>Дата видачі:</label>
-            <p>{{ territory['date_taken'] }}</p>
-        </div>
-        <div class="form-group">
-            <label>Планова дата здачі:</label>
-            <p>{{ territory['date_due'] }}</p>
-        </div>
-        {% endif %}
-
-        {% if territory['notes'] %}
-        <div class="form-group">
-            <label>Примітки:</label>
-            <p>{{ territory['notes'] }}</p>
-        </div>
-        {% endif %}
-        {% endif %}
 
         <div class="history-section">
             <div class="history-header">
-                <h2>Історія опрацювання</h2>
+                <h2>⏳ Історія опрацювання</h2>
                 {% if is_admin and history %}
                 <form action="{{ url_for('clear_history', territory_id=territory['id']) }}" method="POST" style="display: inline;">
                     <button type="submit" class="trash-icon" title="Очистити історію">🗑️</button>
@@ -197,13 +86,13 @@
             {% if history %}
                 {% for record in history %}
                 <div class="history-item">
-                    <p><strong>Взято:</strong> {{ record['taken_by'] }}</p>
-                    <p><strong>Дата видачі:</strong> {{ record['date_taken'] }}</p>
-                    <p><strong>Планова дата здачі:</strong> {{ record['date_due'] }}</p>
+                    <p><strong>👤 Взято:</strong> {{ record['taken_by'] }}</p>
+                    <p><strong>📅 Дата видачі:</strong> {{ record['date_taken'] }}</p>
+                    <p><strong>✅ Фактична дата здачі:</strong> {{ record['date_returned'] }}</p>
                 </div>
                 {% endfor %}
             {% else %}
-                <p>Історія порожня</p>
+                <p class="no-history">Історія відсутня</p>
             {% endif %}
         </div>
     </div>

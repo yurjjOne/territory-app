@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
 import os
 from datetime import datetime, timedelta
 import hashlib
@@ -9,7 +9,7 @@ from db_factory import DBFactory
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'MySecretKey2025')
 
 # Налаштування логування

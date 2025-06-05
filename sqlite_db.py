@@ -40,7 +40,8 @@ class SQLiteDB:
                 territory_id INTEGER,
                 taken_by TEXT,
                 date_taken TEXT,
-                date_due TEXT
+                date_returned TEXT,
+                notes TEXT
             )
             ''')
             
@@ -114,6 +115,10 @@ class SQLiteDB:
             conn = sqlite3.connect(self.db_name)
             cursor = conn.cursor()
             
+            # Отримуємо поточні дані території
+            cursor.execute('SELECT status, taken_by, date_taken FROM territories WHERE id = ?', (territory_id,))
+            current_data = cursor.fetchone()
+            
             cursor.execute('''
             UPDATE territories 
             SET status = ?, taken_by = ?, date_taken = ?, date_due = ?, notes = ?
@@ -128,6 +133,15 @@ class SQLiteDB:
             ))
             
             conn.commit()
+            
+            # Додаємо запис в історію ТІЛЬКИ коли територія звільняється
+            if current_data and current_data[0] == 'Взято' and data.get('status') == 'Вільна':
+                self.add_history_record(territory_id, {
+                    'taken_by': current_data[1],
+                    'date_taken': current_data[2],
+                    'date_returned': datetime.now().strftime('%d.%m.%Y')
+                })
+            
             conn.close()
             
             # Оновлюємо Google таблицю
@@ -154,10 +168,6 @@ class SQLiteDB:
                 logger.error(f"Помилка оновлення Google таблиці для території {territory_id}: {str(e)}")
                 # Не піднімаємо помилку, щоб не блокувати основну функціональність
             
-            # Якщо територія взята, додаємо запис в історію
-            if data.get('status') == 'Взято':
-                self.add_history_record(territory_id, data)
-                
         except Exception as e:
             logger.error(f"Помилка оновлення території {territory_id}: {str(e)}")
             raise
@@ -169,13 +179,13 @@ class SQLiteDB:
             cursor = conn.cursor()
             
             cursor.execute('''
-            INSERT INTO history (territory_id, taken_by, date_taken, date_due)
+            INSERT INTO history (territory_id, taken_by, date_taken, date_returned)
             VALUES (?, ?, ?, ?)
             ''', (
                 territory_id,
                 data.get('taken_by', ''),
                 data.get('date_taken', ''),
-                data.get('date_due', '')
+                data.get('date_returned', '')
             ))
             
             conn.commit()
@@ -191,10 +201,10 @@ class SQLiteDB:
             cursor = conn.cursor()
             
             cursor.execute('''
-            SELECT territory_id, taken_by, date_taken, date_due
+            SELECT territory_id, taken_by, date_taken, date_returned
             FROM history 
             WHERE territory_id = ?
-            ORDER BY date_taken DESC
+            ORDER BY id DESC
             LIMIT ?
             ''', (territory_id, limit))
             
@@ -204,8 +214,7 @@ class SQLiteDB:
                     'territory_id': row[0],
                     'taken_by': row[1],
                     'date_taken': row[2],
-                    'date_returned': '',  # В SQLite не зберігаємо дату повернення
-                    'notes': ''  # В SQLite не зберігаємо примітки в історії
+                    'date_returned': row[3]
                 })
             
             conn.close()
