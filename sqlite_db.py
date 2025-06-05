@@ -2,6 +2,7 @@ import sqlite3
 from typing import List, Dict, Optional
 import logging
 from datetime import datetime
+from google_integration import update_google_sheet
 
 # Налаштування логування
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -128,6 +129,30 @@ class SQLiteDB:
             
             conn.commit()
             conn.close()
+            
+            # Оновлюємо Google таблицю
+            try:
+                if data.get('status') == 'Взято':
+                    # Якщо територія взята, додаємо нову видачу
+                    update_google_sheet(
+                        territory_id=territory_id,
+                        taken_by=data.get('taken_by', ''),
+                        date_taken=data.get('date_taken', ''),
+                        date_due=data.get('date_due', ''),
+                        returned=False
+                    )
+                elif data.get('status') == 'Вільна':
+                    # Якщо територія повернута, додаємо дату повернення
+                    update_google_sheet(
+                        territory_id=territory_id,
+                        taken_by='',
+                        date_taken='',
+                        date_due=datetime.now().strftime('%d.%m.%Y'),
+                        returned=True
+                    )
+            except Exception as e:
+                logger.error(f"Помилка оновлення Google таблиці для території {territory_id}: {str(e)}")
+                # Не піднімаємо помилку, щоб не блокувати основну функціональність
             
             # Якщо територія взята, додаємо запис в історію
             if data.get('status') == 'Взято':

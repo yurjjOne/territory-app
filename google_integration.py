@@ -112,13 +112,24 @@ def get_territories_from_sheet():
         raise
 
 def update_google_sheet(territory_id, taken_by, date_taken, date_due, returned=False):
-    logger.info(f"[ВІДЛАГОДЖЕННЯ] Оновлення даних для території {territory_id}")
+    logger.info(f"[DEBUG] Starting update_google_sheet with parameters:")
+    logger.info(f"[DEBUG] territory_id: {territory_id}")
+    logger.info(f"[DEBUG] taken_by: {taken_by}")
+    logger.info(f"[DEBUG] date_taken: {date_taken}")
+    logger.info(f"[DEBUG] date_due: {date_due}")
+    logger.info(f"[DEBUG] returned: {returned}")
+    
     try:
+        logger.info(f"[DEBUG] Ensuring client connection...")
+        ensure_client()
+        logger.info(f"[DEBUG] Client connection successful")
+        
+        sheet = client.open_by_key(SPREADSHEET_ID).sheet1
+        logger.info(f"[DEBUG] Successfully opened sheet")
+        
+        logger.info(f"[ВІДЛАГОДЖЕННЯ] Оновлення даних для території {territory_id}")
         logger.info(f"Починаємо оновлення Google Sheet для території {territory_id}")
         logger.info(f"Параметри: взяв={taken_by}, дата_взяття={date_taken}, повернуто={returned}")
-        
-        ensure_client()
-        sheet = client.open_by_key(SPREADSHEET_ID).sheet1
         
         # Конвертуємо в ціле число для розрахунку рядка
         try:
