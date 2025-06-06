@@ -1,71 +1,88 @@
 import pandas as pd
 import sqlite3
 from datetime import datetime
+from backup_manager import backup_important_data
 
 def import_from_csv():
-    print("Починаємо імпорт даних з CSV...")
+    """Імпортує території з CSV файлу, зберігаючи існуючі дані."""
+    print("Починаємо безпечний імпорт даних...")
     
-    # Читаємо CSV файл
+    # Створюємо резервну копію
+    backup_important_data()
+    
     try:
-        df = pd.read_csv('облік територій.csv', encoding='utf-8', sep=';')
-        print(f"Успішно прочитано CSV файл. Знайдено {len(df)} рядків.")
-    except Exception as e:
+        # Читаємо CSV файл
         try:
-            # Спробуємо інше кодування, якщо перше не спрацювало
+            df = pd.read_csv('облік територій.csv', encoding='utf-8', sep=';')
+        except:
             df = pd.read_csv('облік територій.csv', encoding='cp1251', sep=';')
-            print(f"Успішно прочитано CSV файл. Знайдено {len(df)} рядків.")
-        except Exception as e:
-            print(f"Помилка при читанні CSV файлу: {str(e)}")
-            return
-
-    # Підключаємося до бази даних
-    try:
+        print(f"Успішно прочитано CSV файл. Знайдено {len(df)} територій.")
+        
+        # Підключаємося до бази даних
         conn = sqlite3.connect('territories.db')
         cursor = conn.cursor()
-        print("Підключено до бази даних SQLite")
-    except Exception as e:
-        print(f"Помилка підключення до бази даних: {str(e)}")
-        return
-
-    try:
-        # Очищаємо таблицю territories
-        cursor.execute('DELETE FROM territories')
         
-        # Для кожного рядка в CSV
+        # Отримуємо поточний стан територій
+        cursor.execute("""
+            SELECT id, status, taken_by, date_taken, date_due, notes 
+            FROM territories
+        """)
+        current_territories = {row[0]: row[1:] for row in cursor.fetchall()}
+        
+        # Створюємо тимчасову таблицю
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS temp_territories (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                custom_name TEXT,
+                status TEXT,
+                taken_by TEXT,
+                date_taken TEXT,
+                date_due TEXT,
+                notes TEXT
+            )
+        """)
+        
+        # Імпортуємо нові дані, зберігаючи поточний стан
         for index, row in df.iterrows():
-            territory_id = row['id']  # Беремо ID з CSV
-            custom_name = row['custom_name']  # Беремо назву з CSV
+            territory_id = row['id']
+            custom_name = row['custom_name'] if 'custom_name' in row else ''
             
-            # Отримуємо значення з CSV
-            status = 'Вільна'  # За замовчуванням територія вільна
-            taken_by = ''
-            date_taken = ''
-            date_due = ''
+            # Якщо територія існує, зберігаємо її поточний стан
+            if territory_id in current_territories:
+                status, taken_by, date_taken, date_due, notes = current_territories[territory_id]
+            else:
+                status, taken_by, date_taken, date_due, notes = 'Вільна', '', '', '', ''
             
-            # Додаємо запис в базу даних
             cursor.execute('''
-            INSERT INTO territories (id, name, custom_name, status, taken_by, date_taken, date_due, notes)
+            INSERT INTO temp_territories (id, name, custom_name, status, taken_by, date_taken, date_due, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 territory_id,
                 f"Територія {territory_id}",
-                custom_name,  # Використовуємо назву з CSV
+                custom_name,
                 status,
                 taken_by,
                 date_taken,
                 date_due,
-                ''
+                notes
             ))
+        
+        # Замінюємо стару таблицю на нову
+        cursor.execute("DROP TABLE territories")
+        cursor.execute("ALTER TABLE temp_territories RENAME TO territories")
         
         # Зберігаємо зміни
         conn.commit()
-        print("Дані успішно імпортовано в базу даних")
+        print("Дані успішно оновлено!")
         
     except Exception as e:
         print(f"Помилка при імпорті даних: {str(e)}")
-        conn.rollback()
+        if 'conn' in locals() and conn:
+            conn.rollback()
     finally:
-        conn.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 if __name__ == '__main__':
     import_from_csv() 

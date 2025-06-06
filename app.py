@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify
 import os
 from datetime import datetime, timedelta
 import hashlib
 from dotenv import load_dotenv
 import logging
 from db_factory import DBFactory
+from backup_manager import backup_important_data, restore_from_backup
 
 # Load environment variables
 load_dotenv()
@@ -211,6 +212,18 @@ def clear_history(territory_id):
     except Exception as e:
         logger.error(f"Помилка при очищенні історії території {territory_id}: {str(e)}")
         return "Помилка при очищенні історії території", 500
+
+@app.route('/backup', methods=['POST'])
+def create_backup():
+    """Створює резервну копію важливих даних."""
+    backup_important_data()
+    return jsonify({'message': 'Резервну копію створено успішно'})
+
+@app.route('/restore/<path:backup_file>', methods=['POST'])
+def restore_backup(backup_file):
+    """Відновлює дані з резервної копії."""
+    restore_from_backup(backup_file)
+    return jsonify({'message': 'Дані відновлено успішно'})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
