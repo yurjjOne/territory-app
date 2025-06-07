@@ -19,7 +19,7 @@
       </h2>
       <div class="territory-grid" id="takenGrid">
         {% for territory, is_overdue in taken %}
-        <div class="territory-card taken {% if is_overdue %}overdue{% endif %}">
+        <div class="territory-card taken {% if is_overdue %}overdue{% endif %}" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
@@ -39,13 +39,10 @@
           </div>
           {% if is_admin %}
           <div class="button-group">
-            <form action="{{ url_for('release_territory', territory_id=territory[0]) }}" method="POST" style="display: inline;">
+            <form action="{{ url_for('release_territory', territory_id=territory[0]) }}" method="POST" style="display: inline;" onclick="event.stopPropagation()">
               <button type="submit" class="btn btn-danger">Звільнити</button>
             </form>
-            <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
           </div>
-          {% else %}
-          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-secondary">Переглянути</a>
           {% endif %}
         </div>
         {% endfor %}
@@ -59,7 +56,7 @@
       </h2>
       <div class="territory-grid" id="freeGrid">
         {% for territory in free %}
-        <div class="territory-card free">
+        <div class="territory-card free" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
@@ -71,11 +68,6 @@
             </div>
             {% endif %}
           </div>
-          {% if is_admin %}
-          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-primary">Редагувати</a>
-          {% else %}
-          <a href="{{ url_for('update_territory', territory_id=territory[0]) }}" class="btn btn-secondary">Переглянути</a>
-          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -83,12 +75,14 @@
   </div>
 
   <script>
-    document.getElementById('toggleTaken').addEventListener('click', function() {
+    document.getElementById('toggleTaken').addEventListener('click', function(event) {
+      event.stopPropagation();
       this.classList.toggle('inactive');
       document.getElementById('takenGrid').classList.toggle('hidden');
     });
 
-    document.getElementById('toggleFree').addEventListener('click', function() {
+    document.getElementById('toggleFree').addEventListener('click', function(event) {
+      event.stopPropagation();
       this.classList.toggle('inactive');
       document.getElementById('freeGrid').classList.toggle('hidden');
     });
