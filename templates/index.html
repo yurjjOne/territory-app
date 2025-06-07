@@ -4,12 +4,40 @@
   <meta charset="UTF-8">
   <title>Території</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Стилі для кнопки поділитись */
+    .territory-card { 
+      position: relative; 
+    }
+
+    .share-btn {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: #fff;
+      border: 2px solid #d0d0d0;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+      transition: transform .2s;
+      z-index: 10;
+    }
+    .share-btn:hover { 
+      transform: scale(1.1); 
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="header-actions">
       <h1>Території</h1>
-      <a href="{{ url_for('login') }}" class="btn btn-secondary">Вийти</a>
+      {% if not session.get('logged_in') %}
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Увійти</a>
+      {% endif %}
     </div>
 
     <div class="section">
@@ -20,6 +48,22 @@
       <div class="territory-grid" id="takenGrid">
         {% for territory, is_overdue in taken %}
         <div class="territory-card taken {% if is_overdue %}overdue{% endif %}" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
+          <!-- Кнопка поділитись -->
+          {% if territory[7] %}
+          {% set share_text = '📍 ' ~ territory[1] ~ '%0A👤 ' ~ territory[3] ~ '%0A📅 ' ~ territory[4] ~ ' → ' ~ territory[5] %}
+          {% if territory[6] %}
+            {% set share_text = share_text ~ '%0A📝 ' ~ territory[6] %}
+          {% endif %}
+          <button class="share-btn" 
+                  onclick="event.stopPropagation()" 
+                  data-name="{{ territory[1] }}"
+                  data-url="{{ get_full_url('/static/uploads/territories/' ~ territory[0] ~ '.jpg') }}"
+                  data-text="{{ share_text }}"
+                  title="Поділитись">
+            🔗
+          </button>
+          {% endif %}
+
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
@@ -85,6 +129,35 @@
       event.stopPropagation();
       this.classList.toggle('inactive');
       document.getElementById('freeGrid').classList.toggle('hidden');
+    });
+
+    // Обробка кнопки "Поділитись"
+    document.querySelectorAll('.share-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const url = btn.dataset.url;
+        const text = btn.dataset.text;
+        
+        // Спочатку пробуємо використати нативний Share API (для мобільних)
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: btn.dataset.name,
+              text: text,
+              url: url
+            });
+            return;
+          } catch (err) {
+            console.error('Error sharing:', err);
+          }
+        }
+
+        // Якщо Share API недоступний або стався збій, відкриваємо в Telegram
+        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+        window.open(telegramUrl, '_blank', 'noopener,width=600,height=400');
+      });
     });
   </script>
 </body>

@@ -11,7 +11,10 @@ from backup_manager import backup_important_data, restore_from_backup
 load_dotenv()
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'MySecretKey2025')
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+
+# Додаємо конфігурацію для базового URL
+app.config['BASE_URL'] = os.environ.get('BASE_URL', 'https://yurjj.github.io/TerritoryApp')
 
 # Налаштування логування
 logging.basicConfig(
@@ -25,6 +28,17 @@ logger = logging.getLogger(__name__)
 
 # Замінюємо створення db на використання фабрики
 db = DBFactory.get_db()
+
+# Створюємо функцію для отримання повного URL
+def get_full_url(path):
+    if app.debug:
+        return path  # В режимі розробки використовуємо відносні шляхи
+    return app.config['BASE_URL'].rstrip('/') + path
+
+# Додаємо функцію в контекст шаблону
+@app.context_processor
+def utility_processor():
+    return dict(get_full_url=get_full_url)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -64,6 +78,10 @@ def index():
         free = []
         
         for territory in territories:
+            # Check if image exists for this territory
+            image_path = os.path.join(app.static_folder, 'uploads', 'territories', f"{territory['id']}.jpg")
+            has_image = os.path.exists(image_path)
+            
             territory_tuple = (
                 territory['id'],
                 territory['name'] or f"Територія {territory['id']}",
@@ -71,7 +89,8 @@ def index():
                 territory['taken_by'],
                 territory['date_taken'],
                 territory['date_due'],
-                territory['notes']
+                territory['notes'],
+                has_image  # Add has_image as the last element of tuple
             )
             
             if territory['status'] == 'Взято':

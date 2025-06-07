@@ -15,13 +15,13 @@
         <div class="territory-info-section">
             <div class="form-group">
                 <label>Назва:</label>
-                <p class="info-text">{{ territory['name'] }}</p>
+                <p class="info-text">{{ territory['name'] or '' }}</p>
             </div>
 
             <div class="form-group">
                 <label>Статус:</label>
-                <span class="status-label {% if territory['status'] == 'Вільна' %}status-free{% else %}status-taken{% endif %}">
-                    {{ territory['status'] }}
+                <span class="status-label {% if territory['status'] == 'Взято' %}status-taken{% else %}status-free{% endif %}">
+                    {{ territory['status'] or 'Вільна' }}
                 </span>
             </div>
 
@@ -29,19 +29,19 @@
             <form method="POST" class="edit-form">
                 <div class="form-group">
                     <label for="taken_by">👤 Взято (ім'я):</label>
-                    <input type="text" id="taken_by" name="taken_by" value="{{ territory['taken_by'] }}" class="form-control">
+                    <input type="text" id="taken_by" name="taken_by" value="{{ territory['taken_by'] or '' }}" class="form-control">
                 </div>
 
                 <div class="form-group">
                     <label for="date_taken">📅 Дата видачі:</label>
                     <input type="date" id="date_taken" name="date_taken" 
-                           value="{{ territory['date_taken'].split('.')[2] }}-{{ territory['date_taken'].split('.')[1] }}-{{ territory['date_taken'].split('.')[0] if territory['date_taken'] else '' }}"
+                           value="{% if territory['date_taken'] %}{{ territory['date_taken'].split('.')[2] }}-{{ territory['date_taken'].split('.')[1] }}-{{ territory['date_taken'].split('.')[0] }}{% endif %}"
                            class="form-control">
                 </div>
 
                 <div class="form-group">
                     <label for="notes">📝 Примітки:</label>
-                    <textarea id="notes" name="notes" class="form-control">{{ territory['notes'] }}</textarea>
+                    <textarea id="notes" name="notes" class="form-control">{{ territory['notes'] or '' }}</textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Зберегти</button>
@@ -56,11 +56,11 @@
                 {% if territory['status'] == 'Взято' %}
                 <div class="form-group">
                     <label>📅 Дата видачі:</label>
-                    <p class="info-text">{{ territory['date_taken'] }}</p>
+                    <p class="info-text">{{ territory['date_taken'] or '' }}</p>
                 </div>
                 <div class="form-group">
                     <label>📆 Планова дата здачі:</label>
-                    <p class="info-text">{{ territory['date_due'] }}</p>
+                    <p class="info-text">{{ territory['date_due'] or '' }}</p>
                 </div>
                 {% endif %}
 
@@ -86,9 +86,9 @@
             {% if history %}
                 {% for record in history %}
                 <div class="history-item">
-                    <p><strong>👤 Взято:</strong> {{ record['taken_by'] }}</p>
-                    <p><strong>📅 Дата видачі:</strong> {{ record['date_taken'] }}</p>
-                    <p><strong>✅ Фактична дата здачі:</strong> {{ record['date_returned'] }}</p>
+                    <p><strong>👤 Взято:</strong> {{ record['taken_by'] or '' }}</p>
+                    <p><strong>📅 Дата видачі:</strong> {{ record['date_taken'] or '' }}</p>
+                    <p><strong>✅ Фактична дата здачі:</strong> {{ record['date_returned'] or '' }}</p>
                 </div>
                 {% endfor %}
             {% else %}
