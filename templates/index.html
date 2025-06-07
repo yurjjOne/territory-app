@@ -57,7 +57,7 @@
           <button class="share-btn" 
                   onclick="event.stopPropagation()" 
                   data-name="{{ territory[1] }}"
-                  data-url="{{ get_full_url('/static/uploads/territories/' ~ territory[0] ~ '.jpg') }}"
+                  data-url="{{ url_for('static', filename='uploads/territories/' ~ territory[0] ~ '.jpg', _external=True) }}"
                   data-text="{{ share_text }}"
                   title="Поділитись">
             🔗

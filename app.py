@@ -14,7 +14,7 @@ app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Додаємо конфігурацію для базового URL
-app.config['BASE_URL'] = os.environ.get('BASE_URL', 'https://yurjj.github.io/TerritoryApp')
+app.config['BASE_URL'] = os.environ.get('BASE_URL', 'https://territoryapp-production.up.railway.app')
 
 # Налаштування логування
 logging.basicConfig(
