@@ -50,7 +50,9 @@
         <div class="territory-card taken {% if is_overdue %}overdue{% endif %}" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
           <!-- Кнопка поділитись -->
           {% if territory[7] %}
-          {% set share_text = '📍 ' ~ territory[1] ~ '%0A👤 ' ~ territory[3] ~ '%0A📅 ' ~ territory[4] ~ ' → ' ~ territory[5] %}
+          {% set share_text = '📍 ' ~ territory[1] ~ '%0A' ~
+                            '👤 Взято: ' ~ territory[3] ~ '%0A' ~
+                            '📅 ' ~ territory[4] ~ ' → ' ~ territory[5] %}
           {% if territory[6] %}
             {% set share_text = share_text ~ '%0A📝 ' ~ territory[6] %}
           {% endif %}

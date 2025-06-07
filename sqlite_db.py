@@ -29,7 +29,8 @@ class SQLiteDB:
                 taken_by TEXT DEFAULT '',
                 date_taken TEXT DEFAULT '',
                 date_due TEXT DEFAULT '',
-                notes TEXT DEFAULT ''
+                notes TEXT DEFAULT '',
+                image_url TEXT DEFAULT ''
             )
             ''')
             
@@ -58,7 +59,7 @@ class SQLiteDB:
             cursor = conn.cursor()
             
             cursor.execute('''
-            SELECT id, custom_name as name, status, taken_by, date_taken, date_due, notes
+            SELECT id, custom_name as name, status, taken_by, date_taken, date_due, notes, image_url
             FROM territories WHERE id = ?
             ''', (territory_id,))
             
@@ -73,7 +74,8 @@ class SQLiteDB:
                     'taken_by': row[3],
                     'date_taken': row[4],
                     'date_due': row[5],
-                    'notes': row[6]
+                    'notes': row[6],
+                    'image_url': row[7]
                 }
             return None
         except Exception as e:
@@ -87,7 +89,7 @@ class SQLiteDB:
             cursor = conn.cursor()
             
             cursor.execute('''
-            SELECT id, custom_name as name, status, taken_by, date_taken, date_due, notes
+            SELECT id, custom_name as name, status, taken_by, date_taken, date_due, notes, image_url
             FROM territories ORDER BY id
             ''')
             
@@ -100,7 +102,8 @@ class SQLiteDB:
                     'taken_by': row[3],
                     'date_taken': row[4],
                     'date_due': row[5],
-                    'notes': row[6]
+                    'notes': row[6],
+                    'image_url': row[7]
                 })
             
             conn.close()

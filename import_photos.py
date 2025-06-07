@@ -1,23 +1,29 @@
 import os
+from sqlite_db import SQLiteDB
 import sqlite3
-from datetime import datetime
 
-# Підключаємося до бази даних
-conn = sqlite3.connect('territory.db')
+# Ініціалізуємо з'єднання з базою даних
+db = SQLiteDB()
+
+# Додаємо колонку image_url, якщо її ще немає
+conn = sqlite3.connect('territories.db')
 cursor = conn.cursor()
-
-# Перевіряємо чи існує колонка image_url
-cursor.execute("PRAGMA table_info(territory)")
+cursor.execute("PRAGMA table_info(territories)")
 columns = cursor.fetchall()
 has_image_url = any(col[1] == 'image_url' for col in columns)
 
-# Якщо колонки немає - додаємо її
 if not has_image_url:
-    cursor.execute("ALTER TABLE territory ADD COLUMN image_url TEXT")
+    cursor.execute("ALTER TABLE territories ADD COLUMN image_url TEXT")
     print("✅ Додано нову колонку image_url")
+conn.close()
 
 # Оновлюємо записи для кожної фотографії
 photos_dir = "static/uploads/territories"
+print(f"📂 Шукаю фотографії в папці {photos_dir}")
+
+conn = sqlite3.connect('territories.db')
+cursor = conn.cursor()
+
 for filename in os.listdir(photos_dir):
     if filename.endswith(('.jpg', '.jpeg', '.png')):
         try:
@@ -29,7 +35,7 @@ for filename in os.listdir(photos_dir):
             
             # Оновлюємо запис в базі даних
             cursor.execute(
-                "UPDATE territory SET image_url = ? WHERE id = ?",
+                "UPDATE territories SET image_url = ? WHERE id = ?",
                 (image_url, territory_id)
             )
             print(f"✅ Додано фото для території {territory_id}")
@@ -38,8 +44,7 @@ for filename in os.listdir(photos_dir):
             print(f"❌ Пропускаю файл {filename} - неправильний формат імені")
             continue
 
-# Зберігаємо зміни
 conn.commit()
 conn.close()
 
-print("✨ Готово! Всі фотографії додано до бази даних.") 
+print("\n✨ Готово! Всі фотографії додано до бази даних.") 

@@ -26,7 +26,7 @@
             </div>
 
             {% if is_admin %}
-            <form method="POST" class="edit-form">
+            <form method="POST" class="edit-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="taken_by">👤 Взято (ім'я):</label>
                     <input type="text" id="taken_by" name="taken_by" value="{{ territory['taken_by'] or '' }}" class="form-control">
@@ -42,6 +42,16 @@
                 <div class="form-group">
                     <label for="notes">📝 Примітки:</label>
                     <textarea id="notes" name="notes" class="form-control">{{ territory['notes'] or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="photo">📸 Фото території:</label>
+                    {% if territory.image_url %}
+                        <img src="{{ territory.image_url }}" alt="Фото території" class="img-fluid rounded mb-3" style="max-width: 100%;">
+                        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+                    {% else %}
+                        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+                    {% endif %}
                 </div>
 
                 <button type="submit" class="btn btn-primary">Зберегти</button>
@@ -68,6 +78,13 @@
                 <div class="form-group">
                     <label>📝 Примітки:</label>
                     <p class="info-text notes">{{ territory['notes'] }}</p>
+                </div>
+                {% endif %}
+
+                {% if territory.image_url %}
+                <div class="form-group">
+                    <label>📸 Фото території:</label>
+                    <img src="{{ territory.image_url }}" alt="Фото території" class="img-fluid rounded mb-3" style="max-width: 100%;">
                 </div>
                 {% endif %}
             </div>
