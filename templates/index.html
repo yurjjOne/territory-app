@@ -142,8 +142,11 @@
         const url = btn.dataset.url;
         const text = decodeURIComponent(btn.dataset.text);
         
+        // Перевіряємо чи це iOS
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
         // Спочатку пробуємо використати нативний Share API (для мобільних)
-        if (navigator.share) {
+        if (navigator.share && !isIOS) {
           try {
             await navigator.share({
               title: btn.dataset.name,
@@ -158,8 +161,9 @@
 
         // Якщо Share API недоступний або стався збій, відкриваємо в Telegram
         // Формуємо повідомлення з текстом і посиланням на фото
-        const fullMessage = text + '%0A%0A📷 Фото території: ' + url;
-        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${fullMessage}`;
+        const encodedText = encodeURIComponent(text);
+        const encodedUrl = encodeURIComponent(url);
+        const telegramUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
         window.open(telegramUrl, '_blank', 'noopener,width=600,height=400');
       });
     });
