@@ -140,7 +140,7 @@
         e.preventDefault();
         
         const url = btn.dataset.url;
-        const text = btn.dataset.text;
+        const text = decodeURIComponent(btn.dataset.text);
         
         // Спочатку пробуємо використати нативний Share API (для мобільних)
         if (navigator.share) {
@@ -157,7 +157,9 @@
         }
 
         // Якщо Share API недоступний або стався збій, відкриваємо в Telegram
-        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+        // Формуємо повідомлення з текстом і посиланням на фото
+        const fullMessage = text + '%0A%0A📷 Фото території: ' + url;
+        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${fullMessage}`;
         window.open(telegramUrl, '_blank', 'noopener,width=600,height=400');
       });
     });
