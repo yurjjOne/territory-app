@@ -12,6 +12,7 @@ load_dotenv()
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+app.permanent_session_lifetime = timedelta(minutes=20)  # Встановлюємо час життя сесії 20 хвилин
 
 # Додаємо конфігурацію для базового URL
 app.config['BASE_URL'] = os.environ.get('BASE_URL', 'https://territoryapp-production.up.railway.app')
@@ -40,6 +41,22 @@ def get_full_url(path):
 def utility_processor():
     return dict(get_full_url=get_full_url)
 
+@app.before_request
+def check_session_timeout():
+    if 'logged_in' in session:
+        # Перевіряємо час останньої активності
+        last_activity = session.get('last_activity')
+        now = datetime.now()
+        
+        if last_activity:
+            last_activity = datetime.fromisoformat(last_activity)
+            if (now - last_activity) > timedelta(minutes=20):
+                session.clear()
+                return redirect(url_for('login'))
+        
+        # Оновлюємо час останньої активності
+        session['last_activity'] = now.isoformat()
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -49,6 +66,7 @@ def login():
         # Use environment variable for passwords
         admin_password = os.environ.get('APP_PASSWORD', 'Pass123')
         viewer_password = os.environ.get('VIEWER_PASSWORD', 'View123')
+        courier_password = os.environ.get('COURIER_PASSWORD', '123')
         
         is_valid = False
         if role == 'admin' and hashlib.sha256(password.encode()).hexdigest() == hashlib.sha256(admin_password.encode()).hexdigest():
@@ -57,9 +75,15 @@ def login():
         elif role == 'viewer' and hashlib.sha256(password.encode()).hexdigest() == hashlib.sha256(viewer_password.encode()).hexdigest():
             is_valid = True
             session['role'] = 'viewer'
+        elif role == 'courier' and hashlib.sha256(password.encode()).hexdigest() == hashlib.sha256(courier_password.encode()).hexdigest():
+            is_valid = True
+            session['role'] = 'courier'
             
         if is_valid:
             session['logged_in'] = True
+            session['last_activity'] = datetime.now().isoformat()  # Додаємо час початку сесії
+            if role == 'courier':
+                return redirect(url_for('courier_home'))
             return redirect(url_for('index'))
         return redirect(url_for('login', error=True))
         
@@ -243,6 +267,36 @@ def restore_backup(backup_file):
     """Відновлює дані з резервної копії."""
     restore_from_backup(backup_file)
     return jsonify({'message': 'Дані відновлено успішно'})
+
+@app.route('/courier')
+def courier_home():
+    if not session.get('logged_in') or session.get('role') != 'courier':
+        return redirect(url_for('login'))
+
+    try:
+        territories = db.get_all_territories()
+        
+        # Фільтруємо тільки вільні території
+        free = []
+        for territory in territories:
+            if territory['status'] != 'Взято':
+                # Перевіряємо наявність фото
+                image_path = os.path.join(app.static_folder, 'uploads', 'territories', f"{territory['id']}.jpg")
+                has_image = os.path.exists(image_path)
+                
+                territory_tuple = (
+                    territory['id'],
+                    territory['name'] or f"Територія {territory['id']}",
+                    territory['status'],
+                    territory['notes'],
+                    has_image
+                )
+                free.append(territory_tuple)
+        
+        return render_template('courier.html', territories=free)
+    except Exception as e:
+        logger.error(f"Помилка при отриманні даних: {str(e)}")
+        return "Помилка при отриманні даних", 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
