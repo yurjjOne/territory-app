@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class SQLiteDB:
-    def __init__(self):
-        self.db_name = 'territories.db'
+    def __init__(self, db_path: str):
+        self.db_name = db_path
         self._ensure_db_exists()
 
     def _ensure_db_exists(self):
