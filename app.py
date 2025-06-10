@@ -346,18 +346,22 @@ def territory(territory_id):
         territory_data = db.get_territory(territory_id)
         if territory_data:
             # Перевіряємо фото в Volume
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{territory_id}.jpg")
-            if os.path.exists(image_path):
+            volume_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{territory_id}.jpg")
+            if os.path.exists(volume_path):
                 territory_data['image_url'] = f"/uploads/{territory_id}.jpg"
             else:
                 # Перевіряємо фото в static
-                static_path = f"uploads/territories/{territory_id}.jpg"
-                if os.path.exists(os.path.join('static', static_path)):
-                    territory_data['image_url'] = f"/static/{static_path}"
+                static_path = os.path.join('static', 'uploads', 'territories', f"{territory_id}.jpg")
+                if os.path.exists(static_path):
+                    territory_data['image_url'] = url_for('static', filename=f'uploads/territories/{territory_id}.jpg')
                 else:
                     territory_data['image_url'] = None
             
-            return render_template('territory.html', territory=territory_data, user_role=session.get('role', ''))
+            history = db.get_territory_history(territory_id)
+            return render_template('update.html', 
+                                territory=territory_data,
+                                history=history,
+                                is_admin=session.get('role') == 'admin')
         return "Територію не знайдено", 404
     except Exception as e:
         print(f"Помилка при отриманні території {territory_id}: {str(e)}")
