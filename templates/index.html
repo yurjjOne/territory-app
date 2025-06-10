@@ -10,6 +10,21 @@
       position: relative; 
     }
 
+    /* Стилі для фотографій */
+    .territory-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
+    .territory-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .share-btn {
       position: absolute;
       top: -12px;
@@ -48,6 +63,13 @@
       <div class="territory-grid" id="takenGrid">
         {% for territory, is_overdue in taken %}
         <div class="territory-card taken {% if is_overdue %}overdue{% endif %}" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
+          <!-- Фотографія території -->
+          {% if territory[7] %}
+          <div class="territory-image">
+            <img src="{{ territory[7] }}" alt="Фото території {{ territory[0] }}">
+          </div>
+          {% endif %}
+          
           <!-- Кнопка поділитись -->
           {% if territory[7] and is_admin %}
           {% set share_text = '📍 ' ~ territory[1] ~ '%0A' ~
@@ -103,6 +125,13 @@
       <div class="territory-grid" id="freeGrid">
         {% for territory in free %}
         <div class="territory-card free" onclick="window.location.href='{{ url_for('update_territory', territory_id=territory[0]) }}'">
+          <!-- Фотографія території -->
+          {% if territory[7] %}
+          <div class="territory-image">
+            <img src="{{ territory[7] }}" alt="Фото території {{ territory[0] }}">
+          </div>
+          {% endif %}
+          
           <div class="territory-number">{{ territory[0] }}</div>
           <h3>{{ territory[1] }}</h3>
           <div class="territory-info">
