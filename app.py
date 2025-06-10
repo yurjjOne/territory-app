@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import logging
 from db_factory import DBFactory
 from backup_manager import backup_important_data, restore_from_backup
+import shutil
 
 # Load environment variables
 load_dotenv()
@@ -29,6 +30,24 @@ logger = logging.getLogger(__name__)
 
 # Замінюємо створення db на використання фабрики
 db = DBFactory.get_db()
+
+# Налаштування шляхів для завантаження
+UPLOAD_FOLDER = os.path.join(os.environ.get('RAILWAY_VOLUME_MOUNT_PATH', 'data'), 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Копіюємо існуючі фотографії при першому запуску
+static_territories = 'static/uploads/territories'
+if os.path.exists(static_territories):
+    for filename in os.listdir(static_territories):
+        src = os.path.join(static_territories, filename)
+        dst = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.isfile(src) and not os.path.exists(dst):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+            print(f"Скопійовано фото: {filename}")
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Створюємо функцію для отримання повного URL
 def get_full_url(path):
@@ -297,6 +316,26 @@ def courier_home():
     except Exception as e:
         logger.error(f"Помилка при отриманні даних: {str(e)}")
         return "Помилка при отриманні даних", 500
+
+# Створюємо функцію для отримання повного URL
+def get_image_url(territory_id):
+    """Повертає URL фотографії території"""
+    # Перевіряємо наявність фото в Volume
+    volume_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{territory_id}.jpg")
+    if os.path.exists(volume_path):
+        return f"/uploads/{territory_id}.jpg"
+    
+    # Якщо немає в Volume, перевіряємо в static
+    static_path = os.path.join('static/uploads/territories', f"{territory_id}.jpg")
+    if os.path.exists(static_path):
+        return f"/static/uploads/territories/{territory_id}.jpg"
+    
+    return None
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    """Повертає файл з Volume"""
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
