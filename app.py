@@ -337,6 +337,62 @@ def uploaded_file(filename):
     """Повертає файл з Volume"""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/territory/<int:territory_id>')
+def territory(territory_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    
+    try:
+        territory_data = db.get_territory(territory_id)
+        if territory_data:
+            # Перевіряємо фото в Volume
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{territory_id}.jpg")
+            if os.path.exists(image_path):
+                territory_data['image_url'] = f"/uploads/{territory_id}.jpg"
+            else:
+                # Перевіряємо фото в static
+                static_path = f"uploads/territories/{territory_id}.jpg"
+                if os.path.exists(os.path.join('static', static_path)):
+                    territory_data['image_url'] = f"/static/{static_path}"
+                else:
+                    territory_data['image_url'] = None
+            
+            return render_template('territory.html', territory=territory_data, user_role=session.get('role', ''))
+        return "Територію не знайдено", 404
+    except Exception as e:
+        print(f"Помилка при отриманні території {territory_id}: {str(e)}")
+        return "Помилка при отриманні даних", 500
+
+@app.route('/territories')
+def territories():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    
+    try:
+        territories_data = db.get_all_territories()
+        
+        # Оновлюємо URL фотографій для кожної території
+        for territory in territories_data:
+            territory_id = territory['id']
+            # Перевіряємо фото в Volume
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{territory_id}.jpg")
+            if os.path.exists(image_path):
+                territory['image_url'] = f"/uploads/{territory_id}.jpg"
+            else:
+                # Перевіряємо фото в static
+                static_path = f"uploads/territories/{territory_id}.jpg"
+                if os.path.exists(os.path.join('static', static_path)):
+                    territory['image_url'] = f"/static/{static_path}"
+                else:
+                    territory['image_url'] = None
+        
+        return render_template('territories.html', 
+                             territories=territories_data,
+                             user_role=session.get('role', ''))
+    except Exception as e:
+        print(f"Помилка при отриманні списку територій: {str(e)}")
+        return "Помилка при отриманні даних", 500
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
