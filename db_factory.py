@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Union
 from sqlite_db import SQLiteDB
 
@@ -18,5 +19,11 @@ class DBFactory:
         
         # Шлях до файлу бази даних
         db_path = os.path.join(data_dir, 'territories.db')
+        
+        # Якщо база даних не існує в новій локації, але існує в корені
+        if not os.path.exists(db_path) and os.path.exists('territories.db'):
+            print("Копіюємо існуючу базу даних в нову локацію...")
+            shutil.copy2('territories.db', db_path)
+            print(f"База даних скопійована в {db_path}")
         
         return SQLiteDB(db_path) 
